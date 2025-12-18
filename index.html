@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shared Manila Calendar</title>
+    <title>CSE Manila Calendar</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     
@@ -14,7 +14,6 @@
 
         .calendar-section { flex: 3; padding: 20px; display: flex; flex-direction: column; align-items: center; overflow-y: auto; }
         
-        /* Notice Banner */
         .refresh-notice { 
             width: 100%; max-width: 850px; background-color: var(--notice-bg); color: var(--notice-text); 
             padding: 12px; border-radius: 8px; border: 1px solid #ffeeba; margin-bottom: 15px; 
@@ -23,12 +22,13 @@
 
         .calendar-container { width: 100%; max-width: 850px; background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; }
 
-        /* Log Sidebar */
         .event-pane { flex: 1; background: #ffffff; border-left: 1px solid #ddd; display: flex; flex-direction: column; padding: 20px; overflow-y: auto; }
         .pane-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ddd; padding-bottom: 8px; margin-bottom: 20px; }
         .pane-title { font-size: 18px; font-weight: bold; color: #333; margin: 0; }
         
-        .pane-item { background: #fdfdfd; border-bottom: 1px solid #eee; padding: 12px 5px; border-left: 4px solid #ccc; margin-bottom: 5px; }
+        .pane-item { background: #fdfdfd; border-bottom: 1px solid #eee; padding: 12px 5px; border-left: 4px solid #ccc; margin-bottom: 5px; animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
+
         .log-add { border-left-color: var(--event-green); }
         .log-delete { border-left-color: var(--delete-red); }
 
@@ -48,7 +48,6 @@
 
         .calendar-pill { background: var(--event-green); color: white; font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-top: 5px; display: flex; justify-content: space-between; align-items: center; }
         
-        /* Modals */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
         .modal-content { background: white; padding: 25px; border-radius: 8px; width: 320px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         input { width: 100%; padding: 10px; margin: 15px 0; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
@@ -80,8 +79,8 @@
     
     <div class="event-pane">
         <div class="pane-header">
-            <h2 class="pane-title">Activity Log <span class="manila-badge">Manila</span></h2>
-        <!-- <button class="clear-btn" onclick="adminClearLog()">Clear Log</button> -->
+            <h2 class="pane-title">Activity Log <span class="manila-badge">Manila Time</span></h2>
+         <!--   <button class="clear-btn" onclick="adminClearLog()">Clear</button> -->
         </div>
         <div id="paneList"></div>
     </div>
@@ -110,7 +109,7 @@
 </div>
 
 <script>
-    // --- INSERT FIREBASE CONFIG HERE ---
+    // --- FIREBASE SETUP ---
     const firebaseConfig = {
 		apiKey: "AIzaSyAqqi6YTOIEhMOrkbE2zYT6W315S4wznog",
 		authDomain: "web-app-8f476.firebaseapp.com",
@@ -120,10 +119,18 @@
 		messagingSenderId: "376213417562",
 		appId: "1:376213417562:web:8e14ad690f4a2b6a07f263",
 		measurementId: "G-N4N5BQ72WZ"
-		};
+	};
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+
+    // PERFORMANCE OPTIMIZATION: 
+    // This maintains a persistent WebSocket connection (HTTP Keep-Alive equivalent)
+    db.ref().child('.info/connected').on('value', (snap) => {
+        if (snap.val() === true) {
+            console.log("Connected to Shared Database (PST/Manila Stream Active)");
+        }
+    });
 
     const ADMIN_PW = "Khel"; 
     let dt = new Date();
@@ -138,6 +145,9 @@
         });
     }
 
+    // REAL-TIME STREAMING:
+    // We use .on() which sets up a persistent listener (SSE logic)
+    // Only changed data is pushed, reducing connection usage.
     db.ref('activeEvents').on('value', (snapshot) => {
         activeEvents = snapshot.val() || {};
         renderCalendar();
@@ -212,10 +222,9 @@
         closeModal('eventModal');
     }
 
-    // CUSTOM DELETE MODAL LOGIC
     function openDeleteModal(dateKey, id, title) {
         pendingDeleteData = { dateKey, id, title };
-        document.getElementById('deletePromptText').innerText = `Are you sure you want to remove "${title}"? This action will be recorded in the log.`;
+        document.getElementById('deletePromptText').innerText = `Remove "${title}"?`;
         document.getElementById('deleteModal').style.display = 'flex';
     }
 
@@ -225,15 +234,12 @@
         db.ref(`activeEvents/${dateKey}/${id}`).remove();
         db.ref('permanentLog').push({ type: 'DELETE', title, dateKey, time: getManilaTime(), timestamp: Date.now() });
         closeModal('deleteModal');
-        pendingDeleteData = null;
     };
 
     function adminClearLog() {
-        const pass = prompt("Enter Admin Password to CLEAR ALL LOGS:");
+        const pass = prompt("Enter Admin Password:");
         if (pass === ADMIN_PW) {
             db.ref('permanentLog').remove();
-        } else if (pass !== null) {
-            alert("Incorrect password.");
         }
     }
 
