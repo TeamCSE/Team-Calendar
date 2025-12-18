@@ -12,31 +12,18 @@
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; }
         .main-wrapper { display: flex; width: 100%; overflow: hidden; }
 
-        /* Left Side: Calendar */
         .calendar-section { flex: 3; padding: 20px; display: flex; flex-direction: column; align-items: center; overflow-y: auto; }
         
-        /* NOTICE BANNER */
+        /* Notice Banner */
         .refresh-notice { 
-            width: 100%; 
-            max-width: 850px; 
-            background-color: var(--notice-bg); 
-            color: var(--notice-text); 
-            padding: 12px; 
-            border-radius: 8px; 
-            border: 1px solid #ffeeba; 
-            margin-bottom: 15px; 
-            text-align: center; 
-            font-size: 14px; 
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
+            width: 100%; max-width: 850px; background-color: var(--notice-bg); color: var(--notice-text); 
+            padding: 12px; border-radius: 8px; border: 1px solid #ffeeba; margin-bottom: 15px; 
+            text-align: center; font-size: 14px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 10px;
         }
 
         .calendar-container { width: 100%; max-width: 850px; background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; }
 
-        /* Right Side: Log */
+        /* Log Sidebar */
         .event-pane { flex: 1; background: #ffffff; border-left: 1px solid #ddd; display: flex; flex-direction: column; padding: 20px; overflow-y: auto; }
         .pane-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ddd; padding-bottom: 8px; margin-bottom: 20px; }
         .pane-title { font-size: 18px; font-weight: bold; color: #333; margin: 0; }
@@ -49,11 +36,9 @@
         .pane-item-meta { font-size: 11px; color: #888; margin-top: 3px; display: block; }
         .manila-badge { font-size: 10px; background: #e1f5fe; color: #0288d1; padding: 2px 6px; border-radius: 10px; text-transform: uppercase; }
 
-        /* Buttons */
         .clear-btn { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold; }
         .nav-btn { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
         
-        /* Grid */
         .calendar-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; }
         .day-header { display: grid; grid-template-columns: repeat(7, 1fr); background: var(--primary); color: white; text-align: center; font-size: 12px; font-weight: bold; }
         .day-header div { padding: 12px 0; }
@@ -63,10 +48,12 @@
 
         .calendar-pill { background: var(--event-green); color: white; font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-top: 5px; display: flex; justify-content: space-between; align-items: center; }
         
-        #eventModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
-        .modal-content { background: white; padding: 25px; border-radius: 8px; width: 300px; }
+        /* Modals */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
+        .modal-content { background: white; padding: 25px; border-radius: 8px; width: 320px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         input { width: 100%; padding: 10px; margin: 15px 0; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
         .btn-group { display: flex; justify-content: flex-end; gap: 10px; }
+        .delete-confirm-btn { background: var(--delete-red); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -90,30 +77,41 @@
             <div id="calendarGrid" class="days-grid"></div>
         </div>
     </div>
-	
+    
     <div class="event-pane">
         <div class="pane-header">
             <h2 class="pane-title">Activity Log <span class="manila-badge">Manila</span></h2>
-          <!-- <button class="clear-btn" onclick="adminClearLog()">Clear Log</button> -->
+        <!-- <button class="clear-btn" onclick="adminClearLog()">Clear Log</button> -->
         </div>
         <div id="paneList"></div>
     </div>
 </div>
 
-<div id="eventModal">
+<div id="eventModal" class="modal">
     <div class="modal-content">
         <h3>New Event / Leave</h3>
         <input type="text" id="eventTitle" placeholder="Enter name or leave type...">
         <div class="btn-group">
-            <button onclick="closeModal()">Cancel</button>
+            <button onclick="closeModal('eventModal')">Cancel</button>
             <button class="nav-btn" onclick="saveEvent()">Save</button>
+        </div>
+    </div>
+</div>
+
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <h3 style="color: var(--delete-red); margin-top:0;">Delete Event?</h3>
+        <p id="deletePromptText" style="font-size: 14px; color: #555;"></p>
+        <div class="btn-group">
+            <button onclick="closeModal('deleteModal')">Cancel</button>
+            <button class="delete-confirm-btn" id="confirmDeleteBtn">Delete</button>
         </div>
     </div>
 </div>
 
 <script>
     // --- INSERT FIREBASE CONFIG HERE ---
-	const firebaseConfig = {
+    const firebaseConfig = {
 		apiKey: "AIzaSyAqqi6YTOIEhMOrkbE2zYT6W315S4wznog",
 		authDomain: "web-app-8f476.firebaseapp.com",
 		databaseURL: "https://web-app-8f476-default-rtdb.firebaseio.com",
@@ -122,7 +120,8 @@
 		messagingSenderId: "376213417562",
 		appId: "1:376213417562:web:8e14ad690f4a2b6a07f263",
 		measurementId: "G-N4N5BQ72WZ"
-	};
+		};
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
@@ -131,6 +130,7 @@
     let selectedDateKey = null;
     let activeEvents = {};
     let permanentLog = [];
+    let pendingDeleteData = null;
 
     function getManilaTime() {
         return new Date().toLocaleTimeString('en-US', {
@@ -177,7 +177,7 @@
                     const pill = document.createElement('div');
                     pill.className = 'calendar-pill';
                     pill.innerHTML = `<span>${ev.title}</span><span style="cursor:pointer; font-weight:bold; padding-left:8px;">×</span>`;
-                    pill.onclick = (e) => { e.stopPropagation(); deleteEvent(dateKey, id, ev.title); };
+                    pill.onclick = (e) => { e.stopPropagation(); openDeleteModal(dateKey, id, ev.title); };
                     dayDiv.appendChild(pill);
                 });
             }
@@ -190,7 +190,6 @@
         const paneList = document.getElementById('paneList');
         paneList.innerHTML = '';
         const sortedLog = [...permanentLog].sort((a,b) => b.timestamp - a.timestamp);
-
         sortedLog.forEach(entry => {
             const item = document.createElement('div');
             item.className = `pane-item ${entry.type === 'ADD' ? 'log-add' : 'log-delete'}`;
@@ -201,32 +200,38 @@
         });
     }
 
-    function openModal(key) { selectedDateKey = key; document.getElementById('eventModal').style.display = 'flex'; }
-    function closeModal() { document.getElementById('eventModal').style.display = 'none'; document.getElementById('eventTitle').value = ''; }
+    function openModal(key) { selectedDateKey = key; document.getElementById('eventModal').style.display = 'flex'; document.getElementById('eventTitle').focus(); }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; if(id==='eventModal') document.getElementById('eventTitle').value = ''; }
 
     function saveEvent() {
         const title = document.getElementById('eventTitle').value;
         const timeStr = getManilaTime();
         if (!title) return;
-
         db.ref('activeEvents/' + selectedDateKey).push({ title, time: timeStr });
         db.ref('permanentLog').push({ type: 'ADD', title, dateKey: selectedDateKey, time: timeStr, timestamp: Date.now() });
-        closeModal();
+        closeModal('eventModal');
     }
 
-    function deleteEvent(dateKey, id, title) {
-        if (confirm(`Delete "${title}"?`)) {
-            db.ref(`activeEvents/${dateKey}/${id}`).remove();
-            db.ref('permanentLog').push({ type: 'DELETE', title, dateKey, time: getManilaTime(), timestamp: Date.now() });
-        }
+    // CUSTOM DELETE MODAL LOGIC
+    function openDeleteModal(dateKey, id, title) {
+        pendingDeleteData = { dateKey, id, title };
+        document.getElementById('deletePromptText').innerText = `Are you sure you want to remove "${title}"? This action will be recorded in the log.`;
+        document.getElementById('deleteModal').style.display = 'flex';
     }
+
+    document.getElementById('confirmDeleteBtn').onclick = () => {
+        if (!pendingDeleteData) return;
+        const { dateKey, id, title } = pendingDeleteData;
+        db.ref(`activeEvents/${dateKey}/${id}`).remove();
+        db.ref('permanentLog').push({ type: 'DELETE', title, dateKey, time: getManilaTime(), timestamp: Date.now() });
+        closeModal('deleteModal');
+        pendingDeleteData = null;
+    };
 
     function adminClearLog() {
         const pass = prompt("Enter Admin Password to CLEAR ALL LOGS:");
         if (pass === ADMIN_PW) {
-            if(confirm("Confirm clearing the activity log?")) {
-                db.ref('permanentLog').remove();
-            }
+            db.ref('permanentLog').remove();
         } else if (pass !== null) {
             alert("Incorrect password.");
         }
@@ -238,4 +243,3 @@
 
 </body>
 </html>
-
