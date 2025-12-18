@@ -26,9 +26,7 @@
         .pane-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ddd; padding-bottom: 8px; margin-bottom: 20px; }
         .pane-title { font-size: 18px; font-weight: bold; color: #333; margin: 0; }
         
-        .pane-item { background: #fdfdfd; border-bottom: 1px solid #eee; padding: 12px 5px; border-left: 4px solid #ccc; margin-bottom: 5px; animation: slideIn 0.3s ease-out; }
-        @keyframes slideIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
-
+        .pane-item { background: #fdfdfd; border-bottom: 1px solid #eee; padding: 12px 5px; border-left: 4px solid #ccc; margin-bottom: 5px; }
         .log-add { border-left-color: var(--event-green); }
         .log-delete { border-left-color: var(--delete-red); }
 
@@ -48,6 +46,7 @@
 
         .calendar-pill { background: var(--event-green); color: white; font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-top: 5px; display: flex; justify-content: space-between; align-items: center; }
         
+        /* Modals */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
         .modal-content { background: white; padding: 25px; border-radius: 8px; width: 320px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         input { width: 100%; padding: 10px; margin: 15px 0; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
@@ -80,7 +79,7 @@
     <div class="event-pane">
         <div class="pane-header">
             <h2 class="pane-title">Activity Log <span class="manila-badge">Manila Time</span></h2>
-         <!--   <button class="clear-btn" onclick="adminClearLog()">Clear</button> -->
+           <!-- <button class="clear-btn" onclick="openAdminModal()">Clear</button> -->
         </div>
         <div id="paneList"></div>
     </div>
@@ -108,8 +107,21 @@
     </div>
 </div>
 
+<div id="adminModal" class="modal">
+    <div class="modal-content">
+        <h3 style="margin-top:0;">Clear Activity Log</h3>
+        <p style="font-size: 13px; color: #666;">Enter Admin Password to wipe the history for everyone.</p>
+        <input type="password" id="adminPassInput" placeholder="Enter Password">
+        <div id="adminError" style="color:red; font-size:11px; margin-bottom:10px; display:none;">Incorrect password!</div>
+        <div class="btn-group">
+            <button onclick="closeModal('adminModal')">Cancel</button>
+            <button class="delete-confirm-btn" onclick="verifyAndClearLog()">Clear All</button>
+        </div>
+    </div>
+</div>
+
 <script>
-    // --- FIREBASE SETUP ---
+    // --- FIREBASE CONFIG ---
     const firebaseConfig = {
 		apiKey: "AIzaSyAqqi6YTOIEhMOrkbE2zYT6W315S4wznog",
 		authDomain: "web-app-8f476.firebaseapp.com",
@@ -120,17 +132,9 @@
 		appId: "1:376213417562:web:8e14ad690f4a2b6a07f263",
 		measurementId: "G-N4N5BQ72WZ"
 	};
-
+	
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-
-    // PERFORMANCE OPTIMIZATION: 
-    // This maintains a persistent WebSocket connection (HTTP Keep-Alive equivalent)
-    db.ref().child('.info/connected').on('value', (snap) => {
-        if (snap.val() === true) {
-            console.log("Connected to Shared Database (PST/Manila Stream Active)");
-        }
-    });
 
     const ADMIN_PW = "Khel"; 
     let dt = new Date();
@@ -145,9 +149,7 @@
         });
     }
 
-    // REAL-TIME STREAMING:
-    // We use .on() which sets up a persistent listener (SSE logic)
-    // Only changed data is pushed, reducing connection usage.
+    // WebSocket / Real-time Sync
     db.ref('activeEvents').on('value', (snapshot) => {
         activeEvents = snapshot.val() || {};
         renderCalendar();
@@ -211,7 +213,15 @@
     }
 
     function openModal(key) { selectedDateKey = key; document.getElementById('eventModal').style.display = 'flex'; document.getElementById('eventTitle').focus(); }
-    function closeModal(id) { document.getElementById(id).style.display = 'none'; if(id==='eventModal') document.getElementById('eventTitle').value = ''; }
+    
+    function closeModal(id) { 
+        document.getElementById(id).style.display = 'none'; 
+        if(id==='eventModal') document.getElementById('eventTitle').value = '';
+        if(id==='adminModal') {
+            document.getElementById('adminPassInput').value = '';
+            document.getElementById('adminError').style.display = 'none';
+        }
+    }
 
     function saveEvent() {
         const title = document.getElementById('eventTitle').value;
@@ -236,10 +246,19 @@
         closeModal('deleteModal');
     };
 
-    function adminClearLog() {
-        const pass = prompt("Enter Admin Password:");
-        if (pass === ADMIN_PW) {
+    // CUSTOM LOG CLEARING LOGIC
+    function openAdminModal() {
+        document.getElementById('adminModal').style.display = 'flex';
+        document.getElementById('adminPassInput').focus();
+    }
+
+    function verifyAndClearLog() {
+        const input = document.getElementById('adminPassInput').value;
+        if (input === ADMIN_PW) {
             db.ref('permanentLog').remove();
+            closeModal('adminModal');
+        } else {
+            document.getElementById('adminError').style.display = 'block';
         }
     }
 
