@@ -10,87 +10,110 @@
     <style>
         :root { 
             --primary: #4a90e2; 
-            --primary-hover: #357abd; 
             --event-green: #5cb85c; 
             --delete-red: #d9534f; 
             --bg: #f4f7f6; 
             --border: #eee; 
-            --error-red: #ff4d4d; 
             --notice-bg: #fff3cd;
             --notice-text: #856404;
         }
 
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; font-size: 11px; 
+        }
+        
         .main-wrapper { display: flex; width: 100%; height: 100%; }
 
-        /* Notice Banner */
-        .notice-banner {
-            width: 100%;
-            background: var(--notice-bg);
-            color: var(--notice-text);
-            padding: 12px;
-            text-align: center;
-            font-size: 14px;
-            font-weight: 600;
-            border-bottom: 1px solid #ffeeba;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
+        /* CENTERED CALENDAR SECTION */
+        .calendar-section { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: flex-start;
+            overflow-y: auto; 
+            position: relative; 
+            padding: 0 20px;
         }
-        .refresh-btn {
-            background: var(--primary);
-            color: white;
-            padding: 5px 12px;
+
+        /* Holiday Widget - Fixed Left */
+        .holiday-widget {
+            position: absolute; 
+            top: 45px; 
+            left: 20px; /* Aligned to the edge of the section */
+            width: 155px;
+            background: white; 
+            border: 1px solid #ddd; 
             border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            border: none;
-            transition: background 0.2s;
+            padding: 5px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            max-height: 120px; 
+            overflow-y: auto; 
+            z-index: 10;
         }
-        .refresh-btn:hover { background: var(--primary-hover); }
+        .holiday-widget h4 { margin: 0 0 4px 0; font-size: 9px; color: #333; border-bottom: 1px solid #eee; }
+        .holiday-item { font-size: 8.5px; margin-bottom: 3px; line-height: 1.1; display: flex; align-items: flex-start; gap: 4px; color: #555; }
+        .holiday-item b { color: var(--primary); font-size: 8px; }
 
-        /* Layout Sections */
-        .calendar-section { flex: 3; display: flex; flex-direction: column; align-items: center; overflow-y: auto; }
-        .calendar-container { width: 95%; max-width: 900px; background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; margin-top: 20px; }
-        .event-pane { flex: 1; background: #ffffff; border-left: 1px solid #ddd; display: flex; flex-direction: column; padding: 20px; overflow-y: auto; }
-		.text-box { width: 316px; }
+        .notice-banner {
+            width: 100%; background: var(--notice-bg); color: var(--notice-text);
+            padding: 4px; text-align: center; font-size: 10px; font-weight: 600;
+            border-bottom: 1px solid #ffeeba; display: flex; justify-content: center; align-items: center; gap: 10px;
+        }
 
-        /* Grid UI */
-        .calendar-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: #fff; }
-        .month-display { font-size: 24px; font-weight: bold; color: #333; }
-        .day-header { display: grid; grid-template-columns: repeat(7, 1fr); background: var(--primary); color: white; text-align: center; font-size: 12px; font-weight: bold; }
-        .day-header div { padding: 12px 0; }
+        .refresh-btn { background: var(--primary); color: white; padding: 2px 6px; border-radius: 3px; cursor: pointer; font-size: 9px; border: none; }
+
+        /* Ensuring the Grid is Max Width for centering */
+        .calendar-container { 
+            width: 100%; 
+            max-width: 850px; 
+            background: white; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+            border-radius: 6px; 
+            overflow: hidden; 
+            margin-top: 10px; 
+        }
+
+        /* Activity Log Pane */
+        .event-pane { 
+            width: 280px; 
+            background: #ffffff; 
+            border-left: 1px solid #ddd; 
+            display: flex; 
+            flex-direction: column; 
+            padding: 10px; 
+            overflow-y: auto; 
+        }
+
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; padding: 6px 15px; background: #fff; }
+        .month-display { font-size: 14px; font-weight: bold; color: #333; }
+        .day-header { display: grid; grid-template-columns: repeat(7, 1fr); background: var(--primary); color: white; text-align: center; font-size: 9px; font-weight: bold; }
+        .day-header div { padding: 4px 0; }
         .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); background: #fff; }
-        .day { min-height: 120px; padding: 10px; border: 0.5px solid var(--border); cursor: pointer; transition: all 0.2s ease; position: relative; }
-        .day:hover { background-color: #f0f7ff; box-shadow: inset 0 0 0 2px var(--primary); z-index: 2; }
+        
+        .day { min-height: 75px; padding: 4px; border: 0.5px solid var(--border); cursor: pointer; position: relative; font-size: 10px; }
+        .day:hover { background-color: #f0f7ff; }
         .today { background: #eef6ff !important; font-weight: bold; }
-        .today::after { content: "TODAY"; font-size: 9px; position: absolute; top: 5px; right: 5px; background: var(--primary); color: white; padding: 1px 4px; border-radius: 3px; }
-        .outside { background: #fafafa; color: #ccc; cursor: default; }
+        .today::after { content: "NOW"; font-size: 7px; position: absolute; top: 2px; right: 2px; background: var(--primary); color: white; padding: 1px 3px; border-radius: 2px; }
+        
+        .outside { background: #fafafa; color: #ccc; }
 
-        /* Log UI */
-        .log-item { padding: 12px 10px; border-radius: 0 4px 4px 0; margin-bottom: 8px; font-size: 12px; background: #fdfdfd; border-left: 4px solid #ccc; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .log-item { padding: 5px; border-radius: 0 3px 3px 0; margin-bottom: 4px; font-size: 9px; background: #fdfdfd; border-left: 3px solid #ccc; }
         .log-add { border-left-color: var(--event-green); }
         .log-delete { border-left-color: var(--delete-red); }
 
-        /* Pills & Tooltips restored */
-        .calendar-pill { background: var(--event-green); color: white; font-size: 11px; padding: 6px 8px; border-radius: 4px; margin-top: 5px; display: flex; align-items: center; justify-content: space-between; position: relative; }
-        .pill-tooltip {
-            visibility: hidden; position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%);
-            background-color: #333; color: #fff; text-align: center; padding: 6px 10px; border-radius: 6px;
-            white-space: nowrap; font-size: 10px; z-index: 100; opacity: 0; transition: opacity 0.2s;
-        }
-        .pill-tooltip::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #333 transparent transparent transparent; }
+        .calendar-pill { background: var(--event-green); color: white; font-size: 9px; padding: 2px 5px; border-radius: 2px; margin-top: 2px; display: flex; align-items: center; justify-content: space-between; position: relative; }
+        .pill-tooltip { visibility: hidden; position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%); background-color: #333; color: #fff; padding: 4px 8px; border-radius: 4px; white-space: nowrap; font-size: 9px; z-index: 2000; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
         .calendar-pill:hover .pill-tooltip { visibility: visible; opacity: 1; }
-        .pill-delete { cursor: pointer; font-weight: bold; font-size: 14px; margin-left: 8px; opacity: 0.6; }
-        .pill-delete:hover { opacity: 1; }
+        .pill-delete { cursor: pointer; font-size: 11px; margin-left: 4px; }
 
-        /* Modals */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
-        .modal-content { background: white; padding: 25px; border-radius: 8px; width: 340px; }
-        input, select { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 4px; }
-        button { cursor: pointer; border-radius: 4px; border: none; font-weight: 600; padding: 8px 15px; }
-        .error-msg { color: var(--error-red); font-size: 11px; margin-bottom: 10px; font-weight: bold; display: none; }
+        /* Modals centered specifically over the calendar section */
+        .modal { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.4); backdrop-filter: blur(1px); align-items: center; justify-content: center; z-index: 100; }
+        .modal-content { background: white; padding: 15px; border-radius: 6px; width: 240px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); border: 1px solid #ddd; }
+        input, select { width: 100%; padding: 5px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 3px; font-size: 10px; box-sizing: border-box;}
+        button { cursor: pointer; border-radius: 3px; border: none; font-weight: 600; padding: 4px 10px; font-size: 10px; }
+        .clear-log-btn { background: #f8d7da; color: #721c24; font-size: 9px; padding: 2px 6px; border: 1px solid #f5c6cb; border-radius: 3px; }
     </style>
 </head>
 <body>
@@ -98,76 +121,81 @@
 <div class="main-wrapper">
     <div class="calendar-section">
         <div class="notice-banner">
-            <span>Notice: Please refresh the page to ensure it is up to date before filling a leave request.</span>
-            <button class="refresh-btn" onclick="window.location.reload()">Refresh Page</button>
+            <span>Please refresh the page to ensure it is up to date before filling a leave request.</span>
+            <button class="refresh-btn" onclick="window.location.reload()">Refresh</button>
+        </div>
+
+        <div class="holiday-widget">
+            <h4>Holidays (PH/US)</h4>
+            <div id="holidayList">Loading...</div>
         </div>
 
         <div class="calendar-container">
             <div class="calendar-header">
-                <button onclick="changeMonth(-1)" style="background:var(--primary); color:white;">Prev</button>
+                <button onclick="changeMonth(-1)" style="background:var(--primary); color:white;">&lt;</button>
                 <div id="monthDisplay" class="month-display"></div>
-                <button onclick="changeMonth(1)" style="background:var(--primary); color:white;">Next</button>
+                <button onclick="changeMonth(1)" style="background:var(--primary); color:white;">&gt;</button>
             </div>
             <div class="day-header">
                 <div>SUN</div><div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div><div>SAT</div>
             </div>
             <div id="calendarGrid" class="days-grid"></div>
         </div>
-        <div style="width:100%; max-width:900px; text-align:center; margin-top:20px; color:#7f8c8d; font-size:13px; font-style:italic;">
+        
+        <div style="width:100%; text-align:center; margin-top:8px; color:#7f8c8d; font-size:9px;">
           <b>This calendar page was created to provide the team with clear visibility for scheduled PTO</b>
+        </div>
+
+        <div id="eventModal" class="modal">
+            <div class="modal-content">
+                <h3 style="margin-top:0; font-size: 12px;">Add Entry</h3>
+                <input type="text" maxlength="6" id="eventTitle" placeholder="Name">
+                <select id="eventShift">
+                    <option value="" disabled selected>-- Select Shift --</option>
+                    <option value="7 PM">7 PM</option>
+                    <option value="8 PM">8 PM</option>
+                    <option value="11 PM">11 PM</option>
+                    <option value="1 AM">1 AM</option>
+                    <option value="10 AM">10 AM</option>
+                </select>
+                <div id="valMsg" style="color:red; font-size:9px; display:none;">Missing fields!</div>
+                <div id="limitMsg" style="color:red; font-size:9px; display:none;"></div>
+                <div style="display:flex; justify-content:flex-end; gap:5px;">
+                    <button onclick="closeModal('eventModal')">Cancel</button>
+                    <button onclick="saveEvent()" style="background:var(--primary); color:white;">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="deleteModal" class="modal">
+            <div class="modal-content">
+                <h3 style="font-size:12px;">Delete?</h3>
+                <p id="deletePromptText" style="color:#555;"></p>
+                <div style="display:flex; justify-content:flex-end; gap:5px;">
+                    <button onclick="closeModal('deleteModal')">Cancel</button>
+                    <button id="confirmDeleteBtn" style="background:var(--delete-red); color:white;">Confirm</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="adminModal" class="modal">
+            <div class="modal-content">
+                <h3 style="font-size:12px;">Admin Clear</h3>
+                <input type="password" id="adminPassInput" placeholder="Password">
+                <div style="display:flex; justify-content:flex-end; gap:5px;">
+                    <button onclick="closeModal('adminModal')">Cancel</button>
+                    <!--<button onclick="verifyAndClearLog()" style="background:var(--delete-red); color:white;">Wipe Logs</button> -->
+                </div>
+            </div>
         </div>
     </div>
     
     <div class="event-pane">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px;">
-            <h2 style="font-size: 18px; margin:0;">Activity Log <span style="font-size: 10px;">(Manila Time)</span></h2>
-           <!--<button onclick="openAdminModal()" style="font-size:11px; background:#f8d7da; color:#721c24;">Clear</button>-->
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 5px;">
+            <h2 style="font-size: 11px; margin:0;">Activity Log <span style="font-size: 8px;">(MNL)</span></h2>
+            <button class="clear-log-btn" onclick="openAdminModal()">Clear</button>
         </div>
-        <div id="paneList" style="margin-top: 15px;"></div>
-    </div>
-</div>
-
-<div id="eventModal" class="modal">
-    <div class="modal-content">
-        <h3 style="margin-top:0;">Add Entry</h3>
-        <input type="text" class="text-box" maxlength="6" id="eventTitle" placeholder="Name">
-		
-        <select id="eventShift">
-            <option value="" disabled selected>-- Select Shift Time --</option>
-            <option value="7 PM">7 PM</option>
-            <option value="8 PM">8 PM</option>
-            <option value="11 PM">11 PM</option>
-            <option value="1 AM">1 AM</option>
-            <option value="10 AM">10 AM</option>
-        </select>
-        <div id="valMsg" class="error-msg">Required fields missing!</div>
-        <div id="limitMsg" class="error-msg"></div>
-        <div style="display:flex; justify-content:flex-end; gap:10px;">
-            <button onclick="closeModal('eventModal')">Cancel</button>
-            <button onclick="saveEvent()" style="background:var(--primary); color:white;">Save</button>
-        </div>
-    </div>
-</div>
-
-<div id="deleteModal" class="modal">
-    <div class="modal-content">
-        <h3>Delete Entry?</h3>
-        <p id="deletePromptText" style="font-size:14px; color:#555;"></p>
-        <div style="display:flex; justify-content:flex-end; gap:10px;">
-            <button onclick="closeModal('deleteModal')">Cancel</button>
-            <button id="confirmDeleteBtn" style="background:var(--delete-red); color:white;">Confirm</button>
-        </div>
-    </div>
-</div>
-
-<div id="adminModal" class="modal">
-    <div class="modal-content">
-        <h3>Admin Clear</h3>
-        <input type="password" id="adminPassInput" placeholder="Password">
-        <div style="display:flex; justify-content:flex-end; gap:10px;">
-            <button onclick="closeModal('adminModal')">Cancel</button>
-            <button onclick="verifyAndClearLog()" style="background:var(--delete-red); color:white;">Wipe Logs</button>
-        </div>
+        <div id="paneList" style="margin-top: 8px;"></div>
     </div>
 </div>
 
@@ -188,13 +216,23 @@
     const ADMIN_PW = "Khel";
     let dt = new Date();
     let activeEvents = {};
-    let selectedDateKey = null;
+    let holidays = [];
+    let selectedDateKey = "";
 
-    function getManilaTime() { 
-        return new Date().toLocaleString('en-US', { 
-            timeZone: 'Asia/Manila', month: 'short', day: 'numeric', year: 'numeric', 
-            hour: '2-digit', minute: '2-digit', hour12: true 
-        }); 
+    async function fetchHolidays(year) {
+        try {
+            const [phRes, usRes] = await Promise.all([
+                fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/PH`),
+                fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/US`)
+            ]);
+            const phData = await phRes.json();
+            const usData = await usRes.json();
+            holidays = [
+                ...phData.map(h => ({ date: h.date, name: h.name, country: 'PH' })),
+                ...usData.map(h => ({ date: h.date, name: h.name, country: 'US' }))
+            ];
+            renderCalendar();
+        } catch (e) { console.error("Fetch Error", e); }
     }
 
     db.ref('activeEvents').on('value', snap => { activeEvents = snap.val() || {}; renderCalendar(); });
@@ -206,7 +244,7 @@
             const entry = logs[k];
             const div = document.createElement('div');
             div.className = `log-item ${entry.type==='ADD'?'log-add':'log-delete'}`;
-            div.innerHTML = `<strong>${entry.type}: ${entry.title}</strong><br><span style="color:#888; font-size:10px;">Logged: ${entry.timestamp_manila}</span>`;
+            div.innerHTML = `<strong>${entry.type}: ${entry.title}</strong><br><span style="color:#888; font-size:8px;">${entry.timestamp_manila}</span>`;
             paneList.appendChild(div);
         });
     });
@@ -215,57 +253,116 @@
         const grid = document.getElementById('calendarGrid'); grid.innerHTML = '';
         const month = dt.getMonth(); const year = dt.getFullYear();
         document.getElementById('monthDisplay').innerText = dt.toLocaleDateString('en-us', { month: 'long', year: 'numeric' });
+        const holidayListDiv = document.getElementById('holidayList');
+        holidayListDiv.innerHTML = '';
         const firstDay = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         for(let i=0; i<firstDay; i++) grid.innerHTML += '<div class="day outside"></div>';
         for(let d=1; d<=daysInMonth; d++) {
+            const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             const key = `${year}-${month+1}-${d}`;
+            const dayHolidays = holidays.filter(h => h.date === dateStr);
+            if(dayHolidays.length > 0) {
+                const hasPH = dayHolidays.some(h => h.country === 'PH'), hasUS = dayHolidays.some(h => h.country === 'US');
+                if (hasPH && hasUS) {
+                    const uniqueNames = [...new Set(dayHolidays.map(h => h.name))];
+                    const item = document.createElement('div'); item.className = 'holiday-item';
+                    item.innerHTML = `<b>ALL</b> <span>${d}: ${uniqueNames.join(' / ')}</span>`; holidayListDiv.appendChild(item);
+                } else {
+                    dayHolidays.forEach(h => {
+                        const item = document.createElement('div'); item.className = 'holiday-item';
+                        item.innerHTML = `<b>${h.country}</b> <span>${d}: ${h.name}</span>`; holidayListDiv.appendChild(item);
+                    });
+                }
+            }
             const div = document.createElement('div'); div.className = 'day'; div.innerHTML = `<strong>${d}</strong>`;
-            if(d===new Date().getDate() && month===new Date().getMonth()) div.classList.add('today');
+            if(d===new Date().getDate() && month===new Date().getMonth() && year===new Date().getFullYear()) div.classList.add('today');
             if(activeEvents[key]) {
                 Object.keys(activeEvents[key]).forEach(id => {
                     const ev = activeEvents[key][id];
                     const p = document.createElement('div'); p.className = 'calendar-pill';
-                    // RESTORED TOOLTIP LOGIC HERE
                     p.innerHTML = `<span>${ev.title}</span><div class="pill-tooltip">Shift: ${ev.shift}</div><span class="pill-delete" onclick="event.stopPropagation(); openDeleteModal('${key}','${id}','${ev.title}')">×</span>`;
                     div.appendChild(p);
                 });
             }
-            div.onclick = () => { selectedDateKey = key; openModal('eventModal'); };
+            div.onclick = () => { 
+                selectedDateKey = key; 
+                document.getElementById('valMsg').style.display='none';
+                document.getElementById('limitMsg').style.display='none';
+                openModal('eventModal'); 
+            };
             grid.appendChild(div);
         }
+        if(holidayListDiv.innerHTML === '') holidayListDiv.innerHTML = '<div style="font-size:8px; color:#999;">No holidays</div>';
     }
 
-    function openModal(id) { 
-        document.getElementById(id).style.display='flex'; 
-        document.getElementById('valMsg').style.display='none';
-        document.getElementById('limitMsg').style.display='none';
-    }
-    
+    function openModal(id) { document.getElementById(id).style.display='flex'; }
     function closeModal(id) { document.getElementById(id).style.display='none'; }
 
     function saveEvent() {
         const t = document.getElementById('eventTitle'), s = document.getElementById('eventShift');
         const v = document.getElementById('valMsg'), l = document.getElementById('limitMsg');
-        v.style.display='none'; l.style.display='none';
+        
+        v.style.display='none';
+        l.style.display='none';
+
         if(!t.value.trim() || !s.value) { v.style.display='block'; return; }
 
         const currentDayEvents = activeEvents[selectedDateKey] || {};
 
+        // Counters for shift logic
+        let shiftCount7or8PM = 0;
+        let count11PM = 0;
+        let count1AM = 0;
+        let count10AM = 0;
+
+        Object.values(currentDayEvents).forEach(ev => {
+            if(ev.shift === "7 PM" || ev.shift === "8 PM") shiftCount7or8PM++;
+            if(ev.shift === "11 PM") count11PM++;
+            if(ev.shift === "1 AM") count1AM++;
+            if(ev.shift === "10 AM") count10AM++;
+        });
+
+        // 7PM & 8PM Combined Logic
         if(s.value === "7 PM" || s.value === "8 PM") {
-            let combinedCount = 0;
-            Object.values(currentDayEvents).forEach(ev => { if(ev.shift === "7 PM" || ev.shift === "8 PM") combinedCount++; });
-            if(combinedCount >= 2) { l.innerText = "Only 2 leaves allowed across 7PM & 8PM shifts combined."; l.style.display = 'block'; return; }
+            if(shiftCount7or8PM >= 2) { 
+                l.innerText = "Only 2 leaves allowed across 7PM & 8PM shifts combined."; 
+                l.style.display = 'block'; return; 
+            }
         }
 
-        if(["11 PM", "1 AM", "10 AM"].includes(s.value)) {
-            let shiftCount = 0;
-            Object.values(currentDayEvents).forEach(ev => { if(ev.shift === s.value) shiftCount++; });
-            if(shiftCount >= 1) { l.innerText = `Only 1 leave allowed for the ${s.value} shift.`; l.style.display = 'block'; return; }
+        // 10AM Logic
+        if(s.value === "10 AM") {
+            if(count10AM >= 1) { 
+                l.innerText = "Only 1 leave allowed for the 10 AM shift."; 
+                l.style.display = 'block'; return; 
+            }
+        }
+
+        // 11PM & 1AM Dependency Logic
+        if(s.value === "11 PM") {
+            // Can have 2 max if 1AM is empty, otherwise max 1
+            let maxAllowed = (count1AM === 0) ? 2 : 1;
+            if(count11PM >= maxAllowed) {
+                l.innerText = count1AM > 0 ? "Only 1 leave allowed for 11 PM because a 1 AM leave is already filed." : "Only 2 leaves allowed for 11 PM.";
+                l.style.display = 'block'; return;
+            }
+        }
+
+        if(s.value === "1 AM") {
+            // Max 1, but blocked if 11PM already has 2
+            if(count11PM >= 2) {
+                l.innerText = "1 AM leave cannot be added because 11 PM already has 2 leaves.";
+                l.style.display = 'block'; return;
+            }
+            if(count1AM >= 1) {
+                l.innerText = "Only 1 leave allowed for the 1 AM shift.";
+                l.style.display = 'block'; return;
+            }
         }
 
         db.ref('activeEvents/'+selectedDateKey).push({ title: t.value, shift: s.value });
-        db.ref('permanentLog').push({ type: 'ADD', title: t.value, timestamp_manila: getManilaTime(), timestamp_raw: Date.now() });
+        db.ref('permanentLog').push({ type: 'ADD', title: t.value, timestamp_manila: new Date().toLocaleString('en-US', {timeZone: 'Asia/Manila'}), timestamp_raw: Date.now() });
         t.value=''; s.selectedIndex=0; closeModal('eventModal');
     }
 
@@ -274,17 +371,18 @@
         document.getElementById('deleteModal').style.display='flex';
         document.getElementById('confirmDeleteBtn').onclick = () => {
             db.ref(`activeEvents/${k}/${i}`).remove();
-            db.ref('permanentLog').push({ type: 'DELETE', title: t, timestamp_manila: getManilaTime(), timestamp_raw: Date.now() });
+            db.ref('permanentLog').push({ type: 'DELETE', title: t, timestamp_manila: new Date().toLocaleString('en-US', {timeZone: 'Asia/Manila'}), timestamp_raw: Date.now() });
             closeModal('deleteModal');
         };
     }
-
-    function verifyAndClearLog() { if(document.getElementById('adminPassInput').value === ADMIN_PW) { db.ref('permanentLog').remove(); closeModal('adminModal'); } }
-    function changeMonth(v) { dt.setMonth(dt.getMonth()+v); renderCalendar(); }
     function openAdminModal() { document.getElementById('adminModal').style.display='flex'; }
-    renderCalendar();
+    function verifyAndClearLog() { 
+        if(document.getElementById('adminPassInput').value === ADMIN_PW) { 
+            db.ref('permanentLog').remove(); document.getElementById('adminPassInput').value = ''; closeModal('adminModal'); 
+        }
+    }
+    function changeMonth(v) { dt.setMonth(dt.getMonth()+v); fetchHolidays(dt.getFullYear()); }
+    fetchHolidays(dt.getFullYear());
 </script>
 </body>
 </html>
-
-
