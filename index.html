@@ -37,24 +37,19 @@
             padding: 0 20px;
         }
 
-        /* Holiday Widget - Fixed Left */
+        /* Holiday Widget - Now inside Side Pane */
         .holiday-widget {
-            position: absolute; 
-            top: 45px; 
-            left: 20px; /* Aligned to the edge of the section */
-            width: 155px;
-            background: white; 
-            border: 1px solid #ddd; 
-            border-radius: 4px;
-            padding: 5px; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            max-height: 120px; 
+            width: 100%;
+            background: #fff; 
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            max-height: 150px; 
             overflow-y: auto; 
-            z-index: 10;
         }
-        .holiday-widget h4 { margin: 0 0 4px 0; font-size: 9px; color: #333; border-bottom: 1px solid #eee; }
-        .holiday-item { font-size: 8.5px; margin-bottom: 3px; line-height: 1.1; display: flex; align-items: flex-start; gap: 4px; color: #555; }
-        .holiday-item b { color: var(--primary); font-size: 8px; }
+        .holiday-widget h4 { margin: 0 0 6px 0; font-size: 10px; color: #333; text-transform: uppercase; letter-spacing: 0.5px; }
+        .holiday-item { font-size: 9px; margin-bottom: 4px; line-height: 1.2; display: flex; align-items: flex-start; gap: 6px; color: #555; }
+        .holiday-item b { color: var(--primary); font-size: 8px; min-width: 15px; }
 
         .notice-banner {
             width: 100%; background: var(--notice-bg); color: var(--notice-text);
@@ -64,7 +59,6 @@
 
         .refresh-btn { background: var(--primary); color: white; padding: 2px 6px; border-radius: 3px; cursor: pointer; font-size: 9px; border: none; }
 
-        /* Ensuring the Grid is Max Width for centering */
         .calendar-container { 
             width: 100%; 
             max-width: 850px; 
@@ -75,7 +69,7 @@
             margin-top: 10px; 
         }
 
-        /* Activity Log Pane */
+        /* Activity Log Pane - Moved Holiday Widget here */
         .event-pane { 
             width: 280px; 
             background: #ffffff; 
@@ -108,7 +102,6 @@
         .calendar-pill:hover .pill-tooltip { visibility: visible; opacity: 1; }
         .pill-delete { cursor: pointer; font-size: 11px; margin-left: 4px; }
 
-        /* Modals centered specifically over the calendar section */
         .modal { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.4); backdrop-filter: blur(1px); align-items: center; justify-content: center; z-index: 100; }
         .modal-content { background: white; padding: 15px; border-radius: 6px; width: 240px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); border: 1px solid #ddd; }
         input, select { width: 100%; padding: 5px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 3px; font-size: 10px; box-sizing: border-box;}
@@ -123,11 +116,6 @@
         <div class="notice-banner">
             <span>Please refresh the page to ensure it is up to date before filling a leave request.</span>
             <button class="refresh-btn" onclick="window.location.reload()">Refresh</button>
-        </div>
-
-        <div class="holiday-widget">
-            <h4>Holidays (PH/US)</h4>
-            <div id="holidayList">Loading...</div>
         </div>
 
         <div class="calendar-container">
@@ -191,9 +179,14 @@
     </div>
     
     <div class="event-pane">
+        <div class="holiday-widget">
+            <h4>Holidays (PH/US)</h4>
+            <div id="holidayList">Loading...</div>
+        </div>
+
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 5px;">
             <h2 style="font-size: 11px; margin:0;">Activity Log <span style="font-size: 8px;">(MNL)</span></h2>
-            <!--<button class="clear-log-btn" onclick="openAdminModal()">Clear</button>-->
+            <!-- <button class="clear-log-btn" onclick="openAdminModal()">Clear</button> -->
         </div>
         <div id="paneList" style="margin-top: 8px;"></div>
     </div>
@@ -310,7 +303,6 @@
 
         const currentDayEvents = activeEvents[selectedDateKey] || {};
 
-        // Counters for shift logic
         let shiftCount7or8PM = 0;
         let count11PM = 0;
         let count1AM = 0;
@@ -323,7 +315,6 @@
             if(ev.shift === "10 AM") count10AM++;
         });
 
-        // 7PM & 8PM Combined Logic
         if(s.value === "7 PM" || s.value === "8 PM") {
             if(shiftCount7or8PM >= 2) { 
                 l.innerText = "Only 2 leaves allowed across 7PM & 8PM shifts combined."; 
@@ -331,7 +322,6 @@
             }
         }
 
-        // 10AM Logic
         if(s.value === "10 AM") {
             if(count10AM >= 1) { 
                 l.innerText = "Only 1 leave allowed for the 10 AM shift."; 
@@ -339,9 +329,7 @@
             }
         }
 
-        // 11PM & 1AM Dependency Logic
         if(s.value === "11 PM") {
-            // Can have 2 max if 1AM is empty, otherwise max 1
             let maxAllowed = (count1AM === 0) ? 2 : 1;
             if(count11PM >= maxAllowed) {
                 l.innerText = count1AM > 0 ? "Only 1 leave allowed for 11 PM because a 1 AM leave is already filed." : "Only 2 leaves allowed for 11 PM.";
@@ -350,7 +338,6 @@
         }
 
         if(s.value === "1 AM") {
-            // Max 1, but blocked if 11PM already has 2
             if(count11PM >= 2) {
                 l.innerText = "1 AM leave cannot be added because 11 PM already has 2 leaves.";
                 l.style.display = 'block'; return;
