@@ -25,7 +25,6 @@
         
         .main-wrapper { display: flex; width: 100%; height: 100%; }
 
-        /* CENTERED CALENDAR SECTION */
         .calendar-section { 
             flex: 1; 
             display: flex; 
@@ -37,7 +36,6 @@
             padding: 0 20px;
         }
 
-        /* Holiday Widget - Now inside Side Pane */
         .holiday-widget {
             width: 100%;
             background: #fff; 
@@ -69,7 +67,6 @@
             margin-top: 10px; 
         }
 
-        /* Activity Log Pane - Moved Holiday Widget here */
         .event-pane { 
             width: 210px; 
             background: #ffffff; 
@@ -106,7 +103,6 @@
         .modal-content { background: white; padding: 15px; border-radius: 6px; width: 240px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); border: 1px solid #ddd; }
         input, select { width: 100%; padding: 5px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 3px; font-size: 10px; box-sizing: border-box;}
         button { cursor: pointer; border-radius: 3px; border: none; font-weight: 600; padding: 4px 10px; font-size: 10px; }
-        .clear-log-btn { background: #f8d7da; color: #721c24; font-size: 9px; padding: 2px 6px; border: 1px solid #f5c6cb; border-radius: 3px; }
     </style>
 </head>
 <body>
@@ -165,17 +161,6 @@
                 </div>
             </div>
         </div>
-
-        <div id="adminModal" class="modal">
-            <div class="modal-content">
-                <h3 style="font-size:12px;">Admin Clear</h3>
-                <input type="password" id="adminPassInput" placeholder="Password">
-                <div style="display:flex; justify-content:flex-end; gap:5px;">
-                    <button onclick="closeModal('adminModal')">Cancel</button>
-                    <button onclick="verifyAndClearLog()" style="background:var(--delete-red); color:white;">Wipe Logs</button>
-                </div>
-            </div>
-        </div>
     </div>
     
     <div class="event-pane">
@@ -183,10 +168,8 @@
             <h4>Holidays (PH/US)</h4>
             <div id="holidayList">Loading...</div>
         </div>
-
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 5px;">
             <h2 style="font-size: 11px; margin:0;">Activity Log <span style="font-size: 8px;">(MNL)</span></h2>
-            <!-- <button class="clear-log-btn" onclick="openAdminModal()">Clear</button> -->
         </div>
         <div id="paneList" style="margin-top: 8px;"></div>
     </div>
@@ -206,7 +189,6 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    const ADMIN_PW = "Khel";
     let dt = new Date();
     let activeEvents = {};
     let holidays = [];
@@ -256,17 +238,10 @@
             const key = `${year}-${month+1}-${d}`;
             const dayHolidays = holidays.filter(h => h.date === dateStr);
             if(dayHolidays.length > 0) {
-                const hasPH = dayHolidays.some(h => h.country === 'PH'), hasUS = dayHolidays.some(h => h.country === 'US');
-                if (hasPH && hasUS) {
-                    const uniqueNames = [...new Set(dayHolidays.map(h => h.name))];
+                dayHolidays.forEach(h => {
                     const item = document.createElement('div'); item.className = 'holiday-item';
-                    item.innerHTML = `<b>ALL</b> <span>${d}: ${uniqueNames.join(' / ')}</span>`; holidayListDiv.appendChild(item);
-                } else {
-                    dayHolidays.forEach(h => {
-                        const item = document.createElement('div'); item.className = 'holiday-item';
-                        item.innerHTML = `<b>${h.country}</b> <span>${d}: ${h.name}</span>`; holidayListDiv.appendChild(item);
-                    });
-                }
+                    item.innerHTML = `<b>${h.country}</b> <span>${d}: ${h.name}</span>`; holidayListDiv.appendChild(item);
+                });
             }
             const div = document.createElement('div'); div.className = 'day'; div.innerHTML = `<strong>${d}</strong>`;
             if(d===new Date().getDate() && month===new Date().getMonth() && year===new Date().getFullYear()) div.classList.add('today');
@@ -286,7 +261,6 @@
             };
             grid.appendChild(div);
         }
-        if(holidayListDiv.innerHTML === '') holidayListDiv.innerHTML = '<div style="font-size:8px; color:#999;">No holidays</div>';
     }
 
     function openModal(id) { document.getElementById(id).style.display='flex'; }
@@ -302,50 +276,36 @@
         if(!t.value.trim() || !s.value) { v.style.display='block'; return; }
 
         const currentDayEvents = activeEvents[selectedDateKey] || {};
-
-        let shiftCount7or8PM = 0;
-        let count11PM = 0;
-        let count1AM = 0;
-        let count10AM = 0;
+        let counts = { "7 PM": 0, "8 PM": 0, "11 PM": 0, "1 AM": 0, "10 AM": 0 };
 
         Object.values(currentDayEvents).forEach(ev => {
-            if(ev.shift === "7 PM" || ev.shift === "8 PM") shiftCount7or8PM++;
-            if(ev.shift === "11 PM") count11PM++;
-            if(ev.shift === "1 AM") count1AM++;
-            if(ev.shift === "10 AM") count10AM++;
+            if(counts.hasOwnProperty(ev.shift)) counts[ev.shift]++;
         });
 
+        // 7PM & 8PM Rule (Combined)
         if(s.value === "7 PM" || s.value === "8 PM") {
-            if(shiftCount7or8PM >= 2) { 
+            if((counts["7 PM"] + counts["8 PM"]) >= 2) { 
                 l.innerText = "Only 2 leaves allowed across 7PM & 8PM shifts combined."; 
                 l.style.display = 'block'; return; 
             }
         }
 
-        if(s.value === "10 AM") {
-            if(count10AM >= 1) { 
-                l.innerText = "Only 1 leave allowed for the 10 AM shift."; 
-                l.style.display = 'block'; return; 
-            }
+        // 10 AM Rule
+        if(s.value === "10 AM" && counts["10 AM"] >= 1) {
+            l.innerText = "Only 1 leave allowed for the 10 AM shift.";
+            l.style.display = 'block'; return;
         }
 
-        if(s.value === "11 PM") {
-            let maxAllowed = (count1AM === 0) ? 2 : 1;
-            if(count11PM >= maxAllowed) {
-                l.innerText = count1AM > 0 ? "Only 1 leave allowed for 11 PM because a 1 AM leave is already filed." : "Only 2 leaves allowed for 11 PM.";
-                l.style.display = 'block'; return;
-            }
+        // UPDATED: 11 PM Rule (Strictly 1 leave)
+        if(s.value === "11 PM" && counts["11 PM"] >= 1) {
+            l.innerText = "Only 1 leave allowed for the 11 PM shift.";
+            l.style.display = 'block'; return;
         }
 
-        if(s.value === "1 AM") {
-            if(count11PM >= 2) {
-                l.innerText = "1 AM leave cannot be added because 11 PM already has 2 leaves.";
-                l.style.display = 'block'; return;
-            }
-            if(count1AM >= 1) {
-                l.innerText = "Only 1 leave allowed for the 1 AM shift.";
-                l.style.display = 'block'; return;
-            }
+        // UPDATED: 1 AM Rule (Independent - 1 leave)
+        if(s.value === "1 AM" && counts["1 AM"] >= 1) {
+            l.innerText = "Only 1 leave allowed for the 1 AM shift.";
+            l.style.display = 'block'; return;
         }
 
         db.ref('activeEvents/'+selectedDateKey).push({ title: t.value, shift: s.value });
@@ -362,15 +322,8 @@
             closeModal('deleteModal');
         };
     }
-    function openAdminModal() { document.getElementById('adminModal').style.display='flex'; }
-    function verifyAndClearLog() { 
-        if(document.getElementById('adminPassInput').value === ADMIN_PW) { 
-            db.ref('permanentLog').remove(); document.getElementById('adminPassInput').value = ''; closeModal('adminModal'); 
-        }
-    }
     function changeMonth(v) { dt.setMonth(dt.getMonth()+v); fetchHolidays(dt.getFullYear()); }
     fetchHolidays(dt.getFullYear());
 </script>
 </body>
 </html>
-
