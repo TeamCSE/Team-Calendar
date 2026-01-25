@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PTO SUMMARY</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --dark: #2c3e50;
+            --light-bg: #f4f7f6;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--light-bg);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden; /* Prevent body scroll, use internal scroll */
+        }
+
+        .main-container {
+            display: flex;
+            width: 100%;
+            max-width: 1200px;
+            height: 100vh;
+            background: var(--white);
+            position: relative;
+        }
+
+        /* LEFT SIDE: SCROLLABLE LEADERBOARD */
+        .leaderboard-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            transition: margin-right 0.3s ease;
+        }
+
+        .nav-header {
+            background: var(--dark);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .year-display { font-size: 26px; font-weight: 800; min-width: 90px; text-align: center; }
+
+        .btn-circle {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s;
+        }
+        .btn-circle:hover { background: var(--primary); }
+
+        /* SCROLLABLE SECTION */
+        .scroll-area {
+            padding: 20px 30px;
+            overflow-y: auto;
+            flex: 1;
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e0 #f7fafc;
+        }
+
+        /* List Items */
+        .user-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            background: #fff;
+            border: 1px solid #edf2f7;
+            transition: all 0.2s ease;
+        }
+
+        .user-row:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-color: var(--primary);
+        }
+
+        .user-row.active { 
+            background: var(--primary); 
+            color: white; 
+            border-color: var(--primary);
+        }
+
+        .user-name-group { display: flex; align-items: center; gap: 15px; }
+        .rank-number { font-size: 12px; opacity: 0.5; font-weight: bold; width: 25px; }
+
+        .event-badge {
+            background: #f1f5f9;
+            color: var(--dark);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 13px;
+        }
+        .active .event-badge { background: rgba(255,255,255,0.2); color: white; }
+
+        /* RIGHT SIDE: DETAIL PANE */
+        .detail-pane {
+            width: 0;
+            background: #fcfcfc;
+            display: flex;
+            flex-direction: column;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-left: 0 solid #eee;
+            overflow: hidden;
+        }
+
+        .detail-pane.open {
+            width: 400px;
+            border-left: 1px solid #e2e8f0;
+        }
+
+        .detail-header {
+            padding: 30px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .date-list { 
+            padding: 10px 30px; 
+            overflow-y: auto; 
+            flex: 1;
+        }
+        
+        .date-item {
+            padding: 15px 0;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 15px;
+            color: var(--dark);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+        }
+        .date-item::before {
+            content: "•";
+            color: var(--primary);
+            margin-right: 12px;
+            font-size: 20px;
+        }
+
+        .close-btn {
+            float: right;
+            background: #edf2f7;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="leaderboard-pane">
+        <div class="nav-header">
+            <div>
+                <div style="font-size: 11px; font-weight: bold; opacity: 0.8; letter-spacing: 1px;">DASHBOARD</div>
+                <div style="font-size: 20px; font-weight: 700;">Plotted PTO SUMMARY</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:15px;">
+                <button class="btn-circle" onclick="changeYear(-1)">&#8249;</button>
+                <div class="year-display" id="yearLabel">2026</div>
+                <button class="btn-circle" onclick="changeYear(1)">&#8250;</button>
+            </div>
+        </div>
+        
+        <div class="scroll-area">
+            <div id="userList"></div>
+        </div>
+    </div>
+
+    <div class="detail-pane" id="detailPane">
+        <div class="detail-header">
+            <button class="close-btn" onclick="closeDetail()">×</button>
+            <div style="font-size:12px; color:var(--primary); font-weight:bold; margin-bottom: 5px;">PTO LOG</div>
+            <h2 id="detailUserName" style="margin:0; font-size:22px; color:var(--dark);">User Name</h2>
+            <div id="detailYear" style="font-size:13px; color:#64748b; margin-top: 4px;">0 Events found</div>
+        </div>
+        <div class="date-list" id="dateList"></div>
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyAqqi6YTOIEhMOrkbE2zYT6W315S4wznog",
+        authDomain: "web-app-8f476.firebaseapp.com",
+        databaseURL: "https://web-app-8f476-default-rtdb.firebaseio.com",
+        projectId: "web-app-8f476",
+        storageBucket: "web-app-8f476.firebasestorage.app",
+        messagingSenderId: "376213417562",
+        appId: "1:376213417562:web:8e14ad690f4a2b6a07f263",
+        measurementId: "G-N4N5BQ72WZ"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let currentYear = new Date().getFullYear();
+    let allData = {};
+    let selectedUser = null;
+
+    db.ref('activeEvents').on('value', (snapshot) => {
+        allData = snapshot.val() || {};
+        renderUserList();
+        if (selectedUser) showUserDetails(selectedUser);
+    });
+
+    function changeYear(delta) {
+        currentYear += delta;
+        document.getElementById('yearLabel').innerText = currentYear;
+        closeDetail();
+        renderUserList();
+    }
+
+    function renderUserList() {
+        const container = document.getElementById('userList');
+        const totals = {};
+
+        Object.keys(allData).forEach(dateKey => {
+            if (parseInt(dateKey.split('-')[0]) === currentYear) {
+                Object.values(allData[dateKey]).forEach(entry => {
+                    const name = entry.title.trim().toUpperCase();
+                    if (name) totals[name] = (totals[name] || 0) + 1;
+                });
+            }
+        });
+
+        const sorted = Object.keys(totals).sort((a,b) => totals[b] - totals[a]);
+        
+        if (sorted.length === 0) {
+            container.innerHTML = `<div style="text-align:center; color:#94a3b8; margin-top:100px;">No records for ${currentYear} 📅</div>`;
+            return;
+        }
+
+        container.innerHTML = sorted.map((name, index) => `
+            <div class="user-row ${selectedUser === name ? 'active' : ''}" onclick="showUserDetails('${name}')">
+                <div class="user-name-group">
+                    <!-- <span class="rank-number">${index + 1}</span> -->
+                    <span style="font-weight:600; font-size:16px;">${name}</span>
+                </div>
+                <span class="event-badge">${totals[name]}</span>
+            </div>
+        `).join('');
+    }
+
+    function showUserDetails(name) {
+        selectedUser = name;
+        renderUserList();
+        
+        const pane = document.getElementById('detailPane');
+        const list = document.getElementById('dateList');
+        document.getElementById('detailUserName').innerText = name;
+        
+        pane.classList.add('open');
+        const userDates = [];
+
+        Object.keys(allData).forEach(dateKey => {
+            const parts = dateKey.split('-');
+            if (parseInt(parts[0]) === currentYear) {
+                Object.values(allData[dateKey]).forEach(entry => {
+                    if (entry.title.trim().toUpperCase() === name) {
+                        const d = new Date(parts[0], parts[1]-1, parts[2]);
+                        userDates.push(d);
+                    }
+                });
+            }
+        });
+
+        userDates.sort((a,b) => a - b);
+        document.getElementById('detailYear').innerText = `${userDates.length} Total events in ${currentYear}`;
+
+        list.innerHTML = userDates.map(d => `
+            <div class="date-item">
+                ${d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', weekday: 'long' })}
+            </div>
+        `).join('');
+    }
+
+    function closeDetail() {
+        selectedUser = null;
+        document.getElementById('detailPane').classList.remove('open');
+        renderUserList();
+    }
+
+    document.getElementById('yearLabel').innerText = currentYear;
+</script>
+
+</body>
+</html>
