@@ -175,7 +175,7 @@
 <div class="main-container">
     <div class="leaderboard-pane">
         <div class="nav-header">
-            <a href="index.html" class="home-link"><span>🏠</span> Calendar</a>
+            <a href="index.html" class="home-link"><span>📅</span> Calendar</a>
             <div style="text-align: center;">
                 <div style="font-size: 9px; font-weight: 800; opacity: 0.6; letter-spacing: 1px;">SUMMARY</div>
                 <div style="font-size: 15px; font-weight: 700;">Annual PTO</div>
@@ -250,7 +250,7 @@
         const sorted = Object.keys(totals).sort((a,b) => totals[b] - totals[a]);
         
         if (sorted.length === 0) {
-            container.innerHTML = `<div style="text-align:center; color:#94a3b8; margin-top:50px;">No events in ${currentYear}</div>`;
+            container.innerHTML = `<div style="text-align:center; color:#94a3b8; margin-top:50px;">No events in ${currentYear} 📅</div>`;
             return;
         }
 
@@ -307,6 +307,7 @@
 
 </body>
 </html>
+
 
 
 
