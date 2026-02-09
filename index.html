@@ -204,16 +204,17 @@
 </div>
 
 <script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyAqqi6YTOIEhMOrkbE2zYT6W315S4wznog",
-        authDomain: "web-app-8f476.firebaseapp.com",
-        databaseURL: "https://web-app-8f476-default-rtdb.firebaseio.com",
-        projectId: "web-app-8f476",
-        storageBucket: "web-app-8f476.firebasestorage.app",
-        messagingSenderId: "376213417562",
-        appId: "1:376213417562:web:8e14ad690f4a2b6a07f263",
-        measurementId: "G-N4N5BQ72WZ"
-    };
+const firebaseConfig = {
+    // This placeholder will be swapped out during deployment
+    apiKey: "REPLACE_WITH_FIREBASE_KEY", 
+    authDomain: "web-app-8f476.firebaseapp.com",
+    databaseURL: "https://web-app-8f476-default-rtdb.firebaseio.com",
+    projectId: "web-app-8f476",
+    storageBucket: "web-app-8f476.firebasestorage.app",
+    messagingSenderId: "376213417562",
+    appId: "1:376213417562:web:8e14ad690f4a2b6a07f263",
+    measurementId: "G-N4N5BQ72WZ"
+};
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
@@ -365,6 +366,7 @@
 </script>
 </body>
 </html>
+
 
 
 
