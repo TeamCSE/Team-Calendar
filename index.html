@@ -363,9 +363,37 @@ const firebaseConfig = {
 
     function changeMonth(v) { dt.setMonth(dt.getMonth()+v); fetchHolidays(dt.getFullYear()); }
     fetchHolidays(dt.getFullYear());
+
+	/**
+     * PURGE LOGIC: Removes entries older than 90 days
+     */
+    function purgeOldLogs() {
+        // 90 days in milliseconds: (90 days * 24 hrs * 60 min * 60 sec * 1000 ms)
+        const ninetyDaysAgo = Date.now() - (90 * 24 * 60 * 60 * 1000);
+        const logRef = db.ref('permanentLog');
+
+        // This finds all logs with a timestamp_raw older than the 90-day cutoff
+        logRef.orderByChild('timestamp_raw').endAt(ninetyDaysAgo).once('value', (snapshot) => {
+            if (snapshot.exists()) {
+                const updates = {};
+                snapshot.forEach((child) => {
+                    updates[child.key] = null; 
+                });
+                logRef.update(updates);
+                console.log("Cleanup: Logs older than 90 days have been purged.");
+            }
+        });
+    }
+
+    // Run purge once when the page opens
+    purgeOldLogs();
+    
+    // Since 90 days is a long time, checking once every 12 hours is enough
+    setInterval(purgeOldLogs, 12 * 60 * 60 * 1000);
 </script>
 </body>
 </html>
+
 
 
 
