@@ -108,7 +108,7 @@
         .today { background: #eef6ff !important; font-weight: bold; }
         .today::after { content: "NOW"; font-size: 7px; position: absolute; top: 2px; right: 2px; background: var(--primary); color: white; padding: 1px 3px; border-radius: 2px; }
         
-        .outside { background: #fafafa; color: #ccc; }
+        .outside { background: #fafafa; color: #ccc; cursor: default; }
 
         .log-item { padding: 5px; border-radius: 0 3px 3px 0; margin-bottom: 4px; font-size: 9px; background: #fdfdfd; border-left: 3px solid #ccc; }
         .log-add { border-left-color: var(--event-green); }
@@ -137,13 +137,13 @@
         <div class="calendar-container">
             <div class="calendar-header">
                 <a href="Dashboard.html" title="Agent PTO Summary" style="text-decoration: none;">
-				<button style="background:var(--primary); color:white; cursor:pointer;">🏠 DASHBOARD</button>
-				</a>
+                <button style="background:var(--primary); color:white; cursor:pointer;">🏠 DASHBOARD</button>
+                </a>
                 <div id="monthDisplay" class="month-display"></div>
-				<div>
-				<button onclick="changeMonth(-1)" style="background:var(--primary); color:white;">◀</button>
+                <div>
+                <button onclick="changeMonth(-1)" style="background:var(--primary); color:white;">◀</button>
                 <button onclick="changeMonth(1)" style="background:var(--primary); color:white;">▶</button>
-				</div>
+                </div>
             </div>
             <div class="day-header">
                 <div>SUN</div><div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div><div>SAT</div>
@@ -151,8 +151,8 @@
             <div id="calendarGrid" class="days-grid"></div>
         </div>
         
-		<div style="width:100%; text-align:center; margin-top:8px; color:#d9534f; font-size:9px;">
-          <b>This calendar is for visibility of scheduled PTO(s). Please ensure all leave is filed in myHR once added to the this calendar, as SupportLogic syncs this information to prevent case assignments during your leave(s).</b>
+        <div style="width:100%; text-align:center; margin-top:8px; color:#d9534f; font-size:9px;">
+          <b>This calendar is for visibility of scheduled PTO(s). Please ensure all leave is filed in myHR once added to this calendar.</b>
         </div>
 
         <div id="eventModal" class="modal">
@@ -204,26 +204,34 @@
 </div>
 
 <script>
-const firebaseConfig = {
-    // This placeholder will be swapped out during deployment
-    apiKey: "REPLACE_WITH_FIREBASE_KEY", 
-    authDomain: "web-app-8f476.firebaseapp.com",
-    databaseURL: "https://web-app-8f476-default-rtdb.firebaseio.com",
-    projectId: "web-app-8f476",
-    storageBucket: "web-app-8f476.firebasestorage.app",
-    messagingSenderId: "376213417562",
-    appId: "1:376213417562:web:8e14ad690f4a2b6a07f263",
-    measurementId: "G-N4N5BQ72WZ"
-};
+    const firebaseConfig = {
+        apiKey: "REPLACE_WITH_FIREBASE_KEY", 
+        authDomain: "web-app-8f476.firebaseapp.com",
+        databaseURL: "https://web-app-8f476-default-rtdb.firebaseio.com",
+        projectId: "web-app-8f476",
+        storageBucket: "web-app-8f476.firebasestorage.app",
+        messagingSenderId: "376213417562",
+        appId: "1:376213417562:web:8e14ad690f4a2b6a07f263",
+        measurementId: "G-N4N5BQ72WZ"
+    };
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+    
+    // SETUP DATE: Set to 1st to avoid overflow issues during navigation
     let dt = new Date();
+    dt.setDate(1); 
+
     let activeEvents = {};
     let holidays = [];
     let selectedDateKey = "";
+    let currentFetchedYear = null;
 
     async function fetchHolidays(year) {
+        if (year === currentFetchedYear) {
+            renderCalendar();
+            return;
+        }
         try {
             const [phRes, usRes] = await Promise.all([
                 fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/PH`),
@@ -235,16 +243,26 @@ const firebaseConfig = {
                 ...phData.map(h => ({ date: h.date, name: h.name, country: 'PH' })),
                 ...usData.map(h => ({ date: h.date, name: h.name, country: 'US' }))
             ];
+            currentFetchedYear = year;
             renderCalendar();
-        } catch (e) { console.error("Fetch Error", e); }
+        } catch (e) { 
+            console.error("Fetch Error", e); 
+            renderCalendar(); 
+        }
     }
 
-    db.ref('activeEvents').on('value', snap => { activeEvents = snap.val() || {}; renderCalendar(); });
+    // Firebase Data Listeners
+    db.ref('activeEvents').on('value', snap => { 
+        activeEvents = snap.val() || {}; 
+        renderCalendar(); 
+    });
+
     db.ref('permanentLog').on('value', snap => {
         const paneList = document.getElementById('paneList');
         paneList.innerHTML = '';
         const logs = snap.val() || {};
-        Object.keys(logs).reverse().forEach(k => {
+        // Showing last 50 entries to keep performance smooth
+        Object.keys(logs).reverse().slice(0, 50).forEach(k => {
             const entry = logs[k];
             const div = document.createElement('div');
             div.className = `log-item ${entry.type==='ADD'?'log-add':'log-delete'}`;
@@ -254,8 +272,11 @@ const firebaseConfig = {
     });
 
     function renderCalendar() {
-        const grid = document.getElementById('calendarGrid'); grid.innerHTML = '';
-        const month = dt.getMonth(); const year = dt.getFullYear();
+        const grid = document.getElementById('calendarGrid'); 
+        grid.innerHTML = '';
+        const month = dt.getMonth(); 
+        const year = dt.getFullYear();
+        
         document.getElementById('monthDisplay').innerText = dt.toLocaleDateString('en-us', { month: 'long', year: 'numeric' });
         const holidayListDiv = document.getElementById('holidayList');
         holidayListDiv.innerHTML = '';
@@ -263,13 +284,20 @@ const firebaseConfig = {
         const firstDay = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         
-        for(let i=0; i<firstDay; i++) grid.innerHTML += '<div class="day outside"></div>';
+        // Days from previous month
+        for(let i=0; i<firstDay; i++) {
+            const div = document.createElement('div');
+            div.className = 'day outside';
+            grid.appendChild(div);
+        }
         
+        // Current month days
+        const today = new Date();
         for(let d=1; d<=daysInMonth; d++) {
             const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             const key = `${year}-${month+1}-${d}`;
             
-            // GROUPING HOLIDAYS
+            // Holidays Logic
             const dayHolidays = holidays.filter(h => h.date === dateStr);
             if(dayHolidays.length > 0) {
                 const hasPH = dayHolidays.some(h => h.country === 'PH');
@@ -278,25 +306,29 @@ const firebaseConfig = {
 
                 const item = document.createElement('div'); 
                 item.className = 'holiday-item';
-                let countryLabel = "PH";
-                if(hasPH && hasUS) countryLabel = "ALL";
-                else if(hasUS) countryLabel = "US";
-                
+                let countryLabel = (hasPH && hasUS) ? "ALL" : (hasUS ? "US" : "PH");
                 item.innerHTML = `<b>${countryLabel}</b> <span>${d}: ${holidayNames}</span>`; 
                 holidayListDiv.appendChild(item);
             }
 
-            const div = document.createElement('div'); div.className = 'day'; div.innerHTML = `<strong>${d}</strong>`;
-            if(d===new Date().getDate() && month===new Date().getMonth() && year===new Date().getFullYear()) div.classList.add('today');
+            const div = document.createElement('div'); 
+            div.className = 'day'; 
+            div.innerHTML = `<strong>${d}</strong>`;
+            
+            if(d === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+                div.classList.add('today');
+            }
             
             if(activeEvents[key]) {
                 Object.keys(activeEvents[key]).forEach(id => {
                     const ev = activeEvents[key][id];
-                    const p = document.createElement('div'); p.className = 'calendar-pill';
+                    const p = document.createElement('div'); 
+                    p.className = 'calendar-pill';
                     p.innerHTML = `<span>${ev.title}</span><div class="pill-tooltip">Shift: ${ev.shift}</div><span class="pill-delete" onclick="event.stopPropagation(); openDeleteModal('${key}','${id}','${ev.title}')">×</span>`;
                     div.appendChild(p);
                 });
             }
+
             div.onclick = () => { 
                 selectedDateKey = key; 
                 document.getElementById('valMsg').style.display='none';
@@ -327,6 +359,7 @@ const firebaseConfig = {
             if(counts.hasOwnProperty(ev.shift)) counts[ev.shift]++;
         });
 
+        // Shift Business Logic
         if(s.value === "7 PM" || s.value === "8 PM") {
             if((counts["7 PM"] + counts["8 PM"]) >= 2) { 
                 l.innerText = "Only 2 leaves allowed across 7PM & 8PM shifts combined."; 
@@ -347,7 +380,12 @@ const firebaseConfig = {
         }
 
         db.ref('activeEvents/'+selectedDateKey).push({ title: t.value, shift: s.value });
-        db.ref('permanentLog').push({ type: 'ADD', title: t.value, timestamp_manila: new Date().toLocaleString('en-US', {timeZone: 'Asia/Manila'}), timestamp_raw: Date.now() });
+        db.ref('permanentLog').push({ 
+            type: 'ADD', 
+            title: t.value, 
+            timestamp_manila: new Date().toLocaleString('en-US', {timeZone: 'Asia/Manila'}), 
+            timestamp_raw: Date.now() 
+        });
         t.value=''; s.selectedIndex=0; closeModal('eventModal');
     }
 
@@ -356,57 +394,39 @@ const firebaseConfig = {
         document.getElementById('deleteModal').style.display='flex';
         document.getElementById('confirmDeleteBtn').onclick = () => {
             db.ref(`activeEvents/${k}/${i}`).remove();
-            db.ref('permanentLog').push({ type: 'DELETE', title: t, timestamp_manila: new Date().toLocaleString('en-US', {timeZone: 'Asia/Manila'}), timestamp_raw: Date.now() });
+            db.ref('permanentLog').push({ 
+                type: 'DELETE', 
+                title: t, 
+                timestamp_manila: new Date().toLocaleString('en-US', {timeZone: 'Asia/Manila'}), 
+                timestamp_raw: Date.now() 
+            });
             closeModal('deleteModal');
         };
     }
 
-    function changeMonth(v) { dt.setMonth(dt.getMonth()+v); fetchHolidays(dt.getFullYear()); }
-    fetchHolidays(dt.getFullYear());
+    function changeMonth(v) { 
+        dt.setDate(1); // Fixes the rollover bug
+        dt.setMonth(dt.getMonth() + v); 
+        fetchHolidays(dt.getFullYear()); 
+    }
 
-	/**
-     * PURGE LOGIC: Removes entries older than 90 days
-     */
+    // Maintenance: Cleanup logs older than 90 days
     function purgeOldLogs() {
-        // 90 days in milliseconds: (90 days * 24 hrs * 60 min * 60 sec * 1000 ms)
         const ninetyDaysAgo = Date.now() - (90 * 24 * 60 * 60 * 1000);
         const logRef = db.ref('permanentLog');
-
-        // This finds all logs with a timestamp_raw older than the 90-day cutoff
         logRef.orderByChild('timestamp_raw').endAt(ninetyDaysAgo).once('value', (snapshot) => {
             if (snapshot.exists()) {
                 const updates = {};
-                snapshot.forEach((child) => {
-                    updates[child.key] = null; 
-                });
+                snapshot.forEach((child) => { updates[child.key] = null; });
                 logRef.update(updates);
-                console.log("Cleanup: Logs older than 90 days have been purged.");
             }
         });
     }
 
-    // Run purge once when the page opens
+    // Initial load
+    fetchHolidays(dt.getFullYear());
     purgeOldLogs();
-    
-    // Since 90 days is a long time, checking once every 12 hours is enough
     setInterval(purgeOldLogs, 12 * 60 * 60 * 1000);
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
