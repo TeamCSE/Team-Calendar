@@ -18,6 +18,31 @@
             --notice-text: #856404;
         }
 
+        /* LOGIN OVERLAY */
+        #loginOverlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(20px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        .login-box {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            width: 260px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .login-box h2 { color: var(--primary); margin: 0 0 15px 0; font-size: 16px; }
+        .login-box input { width: 100%; margin-bottom: 15px; text-align: center; font-size: 14px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        .login-box button { width: 100%; padding: 10px; background: var(--primary); color: white; border: none; cursor: pointer; border-radius: 5px; font-weight: bold; }
+        #errorMsg { color: #d9534f; font-size: 11px; margin-top: 10px; display: none; }
+
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; font-size: 11px; 
@@ -25,78 +50,11 @@
         
         .main-wrapper { display: flex; width: 100%; height: 100%; }
 
-        .calendar-section { 
-            flex: 1; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: flex-start;
-            overflow-y: auto; 
-            position: relative; 
-            padding: 0 20px;
-        }
-
-        .notice-banner {
-            width: 100%; background: var(--notice-bg); color: var(--notice-text);
-            padding: 4px; text-align: center; font-size: 10px; font-weight: 600;
-            border-bottom: 1px solid #ffeeba; display: flex; justify-content: center; align-items: center; gap: 10px;
-        }
-
+        .calendar-section { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; overflow-y: auto; position: relative; padding: 0 20px; }
+        .notice-banner { width: 100%; background: var(--notice-bg); color: var(--notice-text); padding: 4px; text-align: center; font-size: 10px; font-weight: 600; border-bottom: 1px solid #ffeeba; display: flex; justify-content: center; align-items: center; gap: 10px; }
         .refresh-btn { background: var(--primary); color: white; padding: 2px 6px; border-radius: 3px; cursor: pointer; font-size: 9px; border: none; }
-
-        .calendar-container { 
-            width: 100%; 
-            max-width: 850px; 
-            background: white; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
-            border-radius: 6px; 
-            overflow: hidden; 
-            margin-top: 10px; 
-        }
-
-        .event-pane { 
-            width: 210px; 
-            background: #ffffff; 
-            border-left: 1px solid #ddd; 
-            display: flex; 
-            flex-direction: column; 
-            height: 100vh; 
-            padding: 10px; 
-            box-sizing: border-box;
-        }
-
-        .holiday-widget {
-            width: 100%;
-            background: #fff; 
-            border-bottom: 2px solid var(--border);
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-            flex-shrink: 0;
-            max-height: 200px;
-            overflow-y: auto; 
-        }
-
-        .holiday-widget h4 { margin: 0 0 6px 0; font-size: 10px; color: #333; text-transform: uppercase; letter-spacing: 0.5px; }
-        .holiday-item { font-size: 9px; margin-bottom: 4px; line-height: 1.2; display: flex; align-items: flex-start; gap: 6px; color: #555; }
-        .holiday-item b { color: var(--primary); font-size: 8px; min-width: 15px; }
-
-        .log-container {
-            flex: 1;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .log-header {
-            position: sticky;
-            top: 0;
-            background: white;
-            z-index: 10;
-            padding-bottom: 5px;
-            border-bottom: 1px solid #eee;
-            margin-bottom: 8px;
-        }
-
+        
+        .calendar-container { width: 100%; max-width: 850px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 6px; overflow: hidden; margin-top: 10px; }
         .calendar-header { display: flex; justify-content: space-between; align-items: center; padding: 6px 15px; background: #fff; }
         .month-display { font-size: 14px; font-weight: bold; color: #333; }
         .day-header { display: grid; grid-template-columns: repeat(7, 1fr); background: var(--primary); color: white; text-align: center; font-size: 9px; font-weight: bold; }
@@ -107,9 +65,16 @@
         .day:hover { background-color: #f0f7ff; }
         .today { background: #eef6ff !important; font-weight: bold; }
         .today::after { content: "NOW"; font-size: 7px; position: absolute; top: 2px; right: 2px; background: var(--primary); color: white; padding: 1px 3px; border-radius: 2px; }
-        
         .outside { background: #fafafa; color: #ccc; cursor: default; }
 
+        .event-pane { width: 210px; background: #ffffff; border-left: 1px solid #ddd; display: flex; flex-direction: column; height: 100vh; padding: 10px; box-sizing: border-box; }
+        .holiday-widget { width: 100%; background: #fff; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 15px; flex-shrink: 0; max-height: 200px; overflow-y: auto; }
+        .holiday-widget h4 { margin: 0 0 6px 0; font-size: 10px; color: #333; text-transform: uppercase; letter-spacing: 0.5px; }
+        .holiday-item { font-size: 9px; margin-bottom: 4px; line-height: 1.2; display: flex; align-items: flex-start; gap: 6px; color: #555; }
+        .holiday-item b { color: var(--primary); font-size: 8px; min-width: 15px; }
+
+        .log-container { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+        .log-header { position: sticky; top: 0; background: white; z-index: 10; padding-bottom: 5px; border-bottom: 1px solid #eee; margin-bottom: 8px; }
         .log-item { padding: 5px; border-radius: 0 3px 3px 0; margin-bottom: 4px; font-size: 9px; background: #fdfdfd; border-left: 3px solid #ccc; }
         .log-add { border-left-color: var(--event-green); }
         .log-delete { border-left-color: var(--delete-red); }
@@ -121,11 +86,18 @@
 
         .modal { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.4); backdrop-filter: blur(1px); align-items: center; justify-content: center; z-index: 100; }
         .modal-content { background: white; padding: 15px; border-radius: 6px; width: 240px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); border: 1px solid #ddd; }
-        input, select { width: 100%; padding: 5px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 3px; font-size: 10px; box-sizing: border-box;}
-        button { cursor: pointer; border-radius: 3px; border: none; font-weight: 600; padding: 4px 10px; font-size: 10px; }
     </style>
 </head>
 <body>
+
+<div id="loginOverlay">
+    <div class="login-box">
+        <h2>CSE CALENDAR</h2>
+        <input type="password" id="passInput" placeholder="Enter Password" onkeypress="if(event.key==='Enter') checkLogin()">
+        <button id="loginBtn" onclick="checkLogin()">Login</button>
+        <p id="errorMsg">Incorrect Password!</p>
+    </div>
+</div>
 
 <div class="main-wrapper">
     <div class="calendar-section">
@@ -136,14 +108,14 @@
 
         <div class="calendar-container">
             <div class="calendar-header">
-                <a href="Dashboard.html" title="Agent PTO Summary" style="text-decoration: none;">
-                <button style="background:var(--primary); color:white; cursor:pointer;">🏠 DASHBOARD</button>
-                </a>
-                <div id="monthDisplay" class="month-display"></div>
-                <div>
-                <button onclick="changeMonth(-1)" style="background:var(--primary); color:white;">◀</button>
-                <button onclick="changeMonth(1)" style="background:var(--primary); color:white;">▶</button>
-                </div>
+             <a href="Dashboard.html" title="Agent PTO Summary" style="text-decoration: none;">
+             <button style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--primary); color: white; cursor: pointer; padding: 6px 8px; border-radius: 3px; border: none; font-size: 12px; line-height: 1;">🏠 Dashboard</button>
+             </a>
+             <div id="monthDisplay" class="month-display"></div>
+             <div>
+                  <button onclick="changeMonth(-1)" title="Prev" style="background:var(--primary); color:white; padding: 6px 8px; border-radius: 3px; border:none; cursor:pointer; font-size: 12px; line-height: 1;">◀</button>
+				  <button onclick="changeMonth(1)" title="Next" style="background:var(--primary); color:white; padding: 6px 8px; border-radius: 3px; border:none; cursor:pointer; font-size: 12px; line-height: 1;">▶</button>
+             </div>
             </div>
             <div class="day-header">
                 <div>SUN</div><div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div><div>SAT</div>
@@ -157,32 +129,36 @@
 
         <div id="eventModal" class="modal">
             <div class="modal-content">
-                <h3 style="margin-top:0; font-size: 12px;">Add Entry</h3>
-                <input type="text" maxlength="6" id="eventTitle" placeholder="Name">
-                <select id="eventShift">
-                    <option value="" disabled selected>-- Select Shift --</option>
+                <center><h3 style="margin-top:0; font-size: 12px;">Add Entry</h3></center>
+                <input type="text" maxlength="7" id="eventTitle" placeholder="Name" style="width:95%; padding:5px; margin-bottom:10px; border:1px solid #ddd; border-radius:3px; text-align: center;">
+                <select id="eventShift" style="width:100%; padding:5px; margin-bottom:10px; border:1px solid #ddd; border-radius:3px;">
+                    <center>
+					<option value="" disabled selected>-- Shifts in PH Time --</option>
                     <option value="7 PM">7PM (8PM DST)</option>
                     <option value="8 PM">8PM (9PM DST)</option>
                     <option value="11 PM">11PM (12AM DST)</option>
                     <option value="1 AM">1AM (2AM DST)</option>
                     <option value="10 AM">10AM (11AM DST)</option>
+					<option value="" disabled selected>-- Select Shift --</option>
+					</center>
                 </select>
                 <div id="valMsg" style="color:red; font-size:9px; display:none;">Missing fields!</div>
-                <center><div id="limitMsg" style="color:red; font-size:9px; display:none;"></div><br></center>
-                <div style="display:flex; justify-content:flex-end; gap:5px;">
-                    <button onclick="closeModal('eventModal')">Cancel</button>
-                    <button onclick="saveEvent()" style="background:var(--primary); color:white;">Save</button>
+                <center><div id="limitMsg" style="color:red; font-size:9px; display:none;"></div></center>
+                <div style="display:flex; justify-content:flex-end; gap:5px; margin-top:10px;">
+                    <button onclick="closeModal('eventModal')" style="padding:4px 10px; cursor:pointer; border-radius:3px; border:none;">Cancel</button>
+                    <button onclick="saveEvent()" style="background:var(--primary); color:white; padding:4px 10px; cursor:pointer; border-radius:3px; border:none;">Save</button>
                 </div>
             </div>
         </div>
 
         <div id="deleteModal" class="modal">
             <div class="modal-content">
-                <h3 style="font-size:12px;">Delete?</h3>
+                <center><h3 style="font-size:12px;">Delete?</h3>
                 <p id="deletePromptText" style="color:#555;"></p>
+				</center><br>
                 <div style="display:flex; justify-content:flex-end; gap:5px;">
-                    <button onclick="closeModal('deleteModal')">Cancel</button>
-                    <button id="confirmDeleteBtn" style="background:var(--delete-red); color:white;">Confirm</button>
+                    <button onclick="closeModal('deleteModal')" style="padding:4px 10px; cursor:pointer; border-radius:3px; border:none;">Cancel</button>
+                    <button id="confirmDeleteBtn" style="background:var(--delete-red); color:white; padding:4px 10px; cursor:pointer; border-radius:3px; border:none;">Confirm</button>
                 </div>
             </div>
         </div>
@@ -193,7 +169,6 @@
             <h4>Holidays (PH/US)</h4>
             <div id="holidayList">Loading...</div>
         </div>
-
         <div class="log-container">
             <div class="log-header">
                 <h2 style="font-size: 11px; margin:0;">Activity Log <span style="font-size: 8px;">(MNL)</span></h2>
@@ -217,21 +192,29 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    
-    // SETUP DATE: Set to 1st to avoid overflow issues during navigation
-    let dt = new Date();
-    dt.setDate(1); 
 
-    let activeEvents = {};
-    let holidays = [];
-    let selectedDateKey = "";
-    let currentFetchedYear = null;
+    // LOGIN CHECK
+    function checkLogin() {
+        const input = document.getElementById('passInput');
+        const err = document.getElementById('errorMsg');
+        db.ref('pwd').once('value').then((snap) => {
+            if (String(input.value).trim() === String(snap.val()).trim()) {
+                document.getElementById('loginOverlay').style.display = 'none';
+                sessionStorage.setItem('calendar_auth', 'true');
+            } else {
+                err.style.display = 'block';
+                input.value = "";
+            }
+        });
+    }
+    if(sessionStorage.getItem('calendar_auth') === 'true') document.getElementById('loginOverlay').style.display = 'none';
+
+    // CALENDAR CORE LOGIC
+    let dt = new Date(); dt.setDate(1); 
+    let activeEvents = {}, holidays = [], selectedDateKey = "", currentFetchedYear = null;
 
     async function fetchHolidays(year) {
-        if (year === currentFetchedYear) {
-            renderCalendar();
-            return;
-        }
+        if (year === currentFetchedYear) { renderCalendar(); return; }
         try {
             const [phRes, usRes] = await Promise.all([
                 fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/PH`),
@@ -245,96 +228,59 @@
             ];
             currentFetchedYear = year;
             renderCalendar();
-        } catch (e) { 
-            console.error("Fetch Error", e); 
-            renderCalendar(); 
-        }
+        } catch (e) { renderCalendar(); }
     }
 
-    // Firebase Data Listeners
-    db.ref('activeEvents').on('value', snap => { 
-        activeEvents = snap.val() || {}; 
-        renderCalendar(); 
-    });
+    db.ref('activeEvents').on('value', snap => { activeEvents = snap.val() || {}; renderCalendar(); });
 
     db.ref('permanentLog').on('value', snap => {
         const paneList = document.getElementById('paneList');
         paneList.innerHTML = '';
         const logs = snap.val() || {};
-        // Showing last 50 entries to keep performance smooth
         Object.keys(logs).reverse().slice(0, 50).forEach(k => {
             const entry = logs[k];
             const div = document.createElement('div');
             div.className = `log-item ${entry.type==='ADD'?'log-add':'log-delete'}`;
-            div.innerHTML = `<strong>${entry.type}: ${entry.title}</strong><br><span style="color:#888; font-size:8px;">${entry.timestamp_manila}</span>`;
+            div.innerHTML = `<strong>${entry.type}: ${entry.title}</strong><br><span style="color:var(--primary); font-weight:bold; font-size:8px;">Event: ${entry.eventDate || 'N/A'}</span><br><span style="color:#888; font-size:8px;">${entry.timestamp_manila}</span>`;
             paneList.appendChild(div);
         });
     });
 
     function renderCalendar() {
-        const grid = document.getElementById('calendarGrid'); 
-        grid.innerHTML = '';
-        const month = dt.getMonth(); 
-        const year = dt.getFullYear();
-        
+        const grid = document.getElementById('calendarGrid'); grid.innerHTML = '';
+        const month = dt.getMonth(), year = dt.getFullYear();
         document.getElementById('monthDisplay').innerText = dt.toLocaleDateString('en-us', { month: 'long', year: 'numeric' });
-        const holidayListDiv = document.getElementById('holidayList');
-        holidayListDiv.innerHTML = '';
+        const holidayListDiv = document.getElementById('holidayList'); holidayListDiv.innerHTML = '';
         
         const firstDay = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         
-        // Days from previous month
-        for(let i=0; i<firstDay; i++) {
-            const div = document.createElement('div');
-            div.className = 'day outside';
-            grid.appendChild(div);
-        }
+        for(let i=0; i<firstDay; i++) { const div = document.createElement('div'); div.className = 'day outside'; grid.appendChild(div); }
         
-        // Current month days
         const today = new Date();
         for(let d=1; d<=daysInMonth; d++) {
             const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             const key = `${year}-${month+1}-${d}`;
             
-            // Holidays Logic
             const dayHolidays = holidays.filter(h => h.date === dateStr);
             if(dayHolidays.length > 0) {
-                const hasPH = dayHolidays.some(h => h.country === 'PH');
-                const hasUS = dayHolidays.some(h => h.country === 'US');
-                const holidayNames = [...new Set(dayHolidays.map(h => h.name))].join(' / ');
-
-                const item = document.createElement('div'); 
-                item.className = 'holiday-item';
-                let countryLabel = (hasPH && hasUS) ? "ALL" : (hasUS ? "US" : "PH");
-                item.innerHTML = `<b>${countryLabel}</b> <span>${d}: ${holidayNames}</span>`; 
+                const item = document.createElement('div'); item.className = 'holiday-item';
+                item.innerHTML = `<b>${dayHolidays[0].country}</b> <span>${d}: ${dayHolidays[0].name}</span>`; 
                 holidayListDiv.appendChild(item);
             }
 
-            const div = document.createElement('div'); 
-            div.className = 'day'; 
-            div.innerHTML = `<strong>${d}</strong>`;
-            
-            if(d === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
-                div.classList.add('today');
-            }
+            const div = document.createElement('div'); div.className = 'day'; div.innerHTML = `<strong>${d}</strong>`;
+            if(d === today.getDate() && month === today.getMonth() && year === today.getFullYear()) div.classList.add('today');
             
             if(activeEvents[key]) {
                 Object.keys(activeEvents[key]).forEach(id => {
                     const ev = activeEvents[key][id];
-                    const p = document.createElement('div'); 
-                    p.className = 'calendar-pill';
+                    const p = document.createElement('div'); p.className = 'calendar-pill';
                     p.innerHTML = `<span>${ev.title}</span><div class="pill-tooltip">Shift: ${ev.shift}</div><span class="pill-delete" onclick="event.stopPropagation(); openDeleteModal('${key}','${id}','${ev.title}')">×</span>`;
                     div.appendChild(p);
                 });
             }
-
-            div.onclick = () => { 
-                selectedDateKey = key; 
-                document.getElementById('valMsg').style.display='none';
-                document.getElementById('limitMsg').style.display='none';
-                openModal('eventModal'); 
-            };
+            div.onclick = () => { selectedDateKey = key; document.getElementById('valMsg').style.display='none'; document.getElementById('limitMsg').style.display='none'; openModal('eventModal'); };
             grid.appendChild(div);
         }
         if(holidayListDiv.innerHTML === '') holidayListDiv.innerHTML = '<div style="font-size:8px; color:#999;">No holidays</div>';
@@ -346,88 +292,48 @@
     function saveEvent() {
         const t = document.getElementById('eventTitle'), s = document.getElementById('eventShift');
         const v = document.getElementById('valMsg'), l = document.getElementById('limitMsg');
-        
-        v.style.display='none';
-        l.style.display='none';
+        v.style.display='none'; l.style.display='none';
 
         if(!t.value.trim() || !s.value) { v.style.display='block'; return; }
 
         const currentDayEvents = activeEvents[selectedDateKey] || {};
         let counts = { "7 PM": 0, "8 PM": 0, "11 PM": 0, "1 AM": 0, "10 AM": 0 };
+        Object.values(currentDayEvents).forEach(ev => { if(counts.hasOwnProperty(ev.shift)) counts[ev.shift]++; });
 
-        Object.values(currentDayEvents).forEach(ev => {
-            if(counts.hasOwnProperty(ev.shift)) counts[ev.shift]++;
-        });
-
-        // Shift Business Logic
-        if(s.value === "7 PM" || s.value === "8 PM") {
-            if((counts["7 PM"] + counts["8 PM"]) >= 2) { 
-                l.innerText = "Only 2 leaves allowed across 7PM & 8PM shifts combined."; 
-                l.style.display = 'block'; return; 
-            }
+        // SHIFT LOGIC RESTORED
+        if((s.value === "7 PM" || s.value === "8 PM") && (counts["7 PM"] + counts["8 PM"]) >= 2) { 
+            l.innerText = "Only 2 leaves allowed across 7PM & 8PM combined."; l.style.display = 'block'; return; 
         }
-        if(s.value === "10 AM" && counts["10 AM"] >= 1) {
-            l.innerText = "Only 1 leave allowed for the 10 AM shift.";
-            l.style.display = 'block'; return;
-        }
-        if(s.value === "11 PM" && counts["11 PM"] >= 1) {
-            l.innerText = "Only 1 leave allowed for the 11 PM shift.";
-            l.style.display = 'block'; return;
-        }
-        if(s.value === "1 AM" && counts["1 AM"] >= 1) {
-            l.innerText = "Only 1 leave allowed for the 1 AM shift.";
-            l.style.display = 'block'; return;
+        if((s.value === "10 AM" || s.value === "11 PM" || s.value === "1 AM") && counts[s.value] >= 1) {
+            l.innerText = `Only 1 leave allowed for ${s.value}.`; l.style.display = 'block'; return;
         }
 
         db.ref('activeEvents/'+selectedDateKey).push({ title: t.value, shift: s.value });
-        db.ref('permanentLog').push({ 
-            type: 'ADD', 
-            title: t.value, 
-            timestamp_manila: new Date().toLocaleString('en-US', {timeZone: 'Asia/Manila'}), 
-            timestamp_raw: Date.now() 
-        });
+        db.ref('permanentLog').push({ type: 'ADD', title: t.value, eventDate: selectedDateKey, timestamp_manila: new Date().toLocaleString('en-US', {timeZone: 'Asia/Manila'}), timestamp_raw: Date.now() });
         t.value=''; s.selectedIndex=0; closeModal('eventModal');
     }
 
     function openDeleteModal(k, i, t) {
-        document.getElementById('deletePromptText').innerText = `Remove ${t}?`;
-        document.getElementById('deleteModal').style.display='flex';
+        document.getElementById('deletePromptText').innerText = `Remove ${t}?`; openModal('deleteModal');
         document.getElementById('confirmDeleteBtn').onclick = () => {
             db.ref(`activeEvents/${k}/${i}`).remove();
-            db.ref('permanentLog').push({ 
-                type: 'DELETE', 
-                title: t, 
-                timestamp_manila: new Date().toLocaleString('en-US', {timeZone: 'Asia/Manila'}), 
-                timestamp_raw: Date.now() 
-            });
+            db.ref('permanentLog').push({ type: 'DELETE', title: t, eventDate: k, timestamp_manila: new Date().toLocaleString('en-US', {timeZone: 'Asia/Manila'}), timestamp_raw: Date.now() });
             closeModal('deleteModal');
         };
     }
 
-    function changeMonth(v) { 
-        dt.setDate(1); // Fixes the rollover bug
-        dt.setMonth(dt.getMonth() + v); 
-        fetchHolidays(dt.getFullYear()); 
-    }
-
-    // Maintenance: Cleanup logs older than 90 days
+    function changeMonth(v) { dt.setDate(1); dt.setMonth(dt.getMonth() + v); fetchHolidays(dt.getFullYear()); }
+    
     function purgeOldLogs() {
         const ninetyDaysAgo = Date.now() - (90 * 24 * 60 * 60 * 1000);
-        const logRef = db.ref('permanentLog');
-        logRef.orderByChild('timestamp_raw').endAt(ninetyDaysAgo).once('value', (snapshot) => {
-            if (snapshot.exists()) {
-                const updates = {};
-                snapshot.forEach((child) => { updates[child.key] = null; });
-                logRef.update(updates);
-            }
+        db.ref('permanentLog').orderByChild('timestamp_raw').endAt(ninetyDaysAgo).once('value', (snap) => {
+            if (snap.exists()) { const updates = {}; snap.forEach((child) => { updates[child.key] = null; }); db.ref('permanentLog').update(updates); }
         });
     }
 
-    // Initial load
     fetchHolidays(dt.getFullYear());
     purgeOldLogs();
     setInterval(purgeOldLogs, 12 * 60 * 60 * 1000);
 </script>
 </body>
 </html>
-
