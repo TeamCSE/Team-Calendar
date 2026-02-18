@@ -11,6 +11,7 @@
         :root { 
             --primary: #2c3e50; 
             --event-green: #5cb85c; 
+            --urgent-red: #d9534f; /* New Red Color for UL */
             --delete-red: #d9534f; 
             --bg: #000000; 
             --border: #eee; 
@@ -80,6 +81,7 @@
         .log-delete { border-left-color: var(--delete-red); }
 
         .calendar-pill { background: var(--event-green); color: white; font-size: 9px; padding: 2px 5px; border-radius: 2px; margin-top: 2px; display: flex; align-items: center; justify-content: space-between; position: relative; }
+        .calendar-pill.is-ul { background: var(--urgent-red); } /* Style for UL */
         .pill-tooltip { visibility: hidden; position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%); background-color: #333; color: #fff; padding: 4px 8px; border-radius: 4px; white-space: nowrap; font-size: 9px; z-index: 2000; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
         .calendar-pill:hover .pill-tooltip { visibility: visible; opacity: 1; }
         .pill-delete { cursor: pointer; font-size: 11px; margin-left: 4px; }
@@ -114,7 +116,7 @@
              <div id="monthDisplay" class="month-display"></div>
              <div>
                   <button onclick="changeMonth(-1)" title="Prev" style="background:var(--primary); color:white; padding: 6px 8px; border-radius: 3px; border:none; cursor:pointer; font-size: 12px; line-height: 1;">◀</button>
-				  <button onclick="changeMonth(1)" title="Next" style="background:var(--primary); color:white; padding: 6px 8px; border-radius: 3px; border:none; cursor:pointer; font-size: 12px; line-height: 1;">▶</button>
+                  <button onclick="changeMonth(1)" title="Next" style="background:var(--primary); color:white; padding: 6px 8px; border-radius: 3px; border:none; cursor:pointer; font-size: 12px; line-height: 1;">▶</button>
              </div>
             </div>
             <div class="day-header">
@@ -127,35 +129,44 @@
           <b>This calendar is for visibility of scheduled PTO. Please ensure all leave is filed in myHR once added to the this calendar, as SupportLogic syncs this information to prevent case assignments during your leave.</b>
         </div>
 
-        <div id="eventModal" class="modal">
-            <div class="modal-content">
-                <center><h3 style="margin-top:0; font-size: 12px;">Add Entry</h3></center>
-                <input type="text" maxlength="7" id="eventTitle" placeholder="Name" style="width:95%; padding:5px; margin-bottom:10px; border:1px solid #ddd; border-radius:3px; text-align: center;">
-                <select id="eventShift" style="width:100%; padding:5px; margin-bottom:10px; border:1px solid #ddd; border-radius:3px;">
-                    <center>
-					<option value="" disabled selected>-- Shifts in PH Time --</option>
-                    <option value="7 PM">7PM (8PM DST)</option>
-                    <option value="8 PM">8PM (9PM DST)</option>
-                    <option value="11 PM">11PM (12AM DST)</option>
-                    <option value="1 AM">1AM (2AM DST)</option>
-                    <option value="10 AM">10AM (11AM DST)</option>
-					<option value="" disabled selected>-- Select Shift --</option>
-					</center>
-                </select>
-                <div id="valMsg" style="color:red; font-size:9px; display:none;">Missing fields!</div>
-                <center><div id="limitMsg" style="color:red; font-size:9px; display:none;"></div></center>
-                <div style="display:flex; justify-content:flex-end; gap:5px; margin-top:10px;">
-                    <button onclick="closeModal('eventModal')" style="padding:4px 10px; cursor:pointer; border-radius:3px; border:none;">Cancel</button>
-                    <button onclick="saveEvent()" style="background:var(--primary); color:white; padding:4px 10px; cursor:pointer; border-radius:3px; border:none;">Save</button>
-                </div>
-            </div>
+<div id="eventModal" class="modal">
+    <div class="modal-content">
+        <div style="text-align: center; min-height: 35px;">
+            <h3 style="margin-top:0; font-size: 12px; margin-bottom: 2px;">Add Entry</h3>
+            <div id="limitMsg" style="color:red; font-size:9px; display:none; line-height: 12px;"></div>
+            <div id="valMsg" style="color:red; font-size:9px; display:none; line-height: 12px;">Missing fields!</div>
         </div>
+
+        <input type="text" maxlength="7" id="eventTitle" placeholder="Name" style="width:95%; padding:5px; margin-bottom:10px; border:1px solid #ddd; border-radius:3px; text-align: center;">
+        
+        <select id="eventShift" style="width:100%; padding:5px; margin-bottom:10px; border:1px solid #ddd; border-radius:3px;">
+		<center>
+            <option value="" disabled selected>-- Shifts in PH Time --</option>
+            <option value="7 PM">7PM (8PM DST)</option>
+            <option value="8 PM">8PM (9PM DST)</option>
+            <option value="11 PM">11PM (12AM DST)</option>
+            <option value="1 AM">1 AM (2AM DST)</option>
+            <option value="10 AM">10AM (11AM DST)</option>
+		</center>
+        </select>
+
+        <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 10px; font-size: 10px;">
+            <input type="checkbox" id="urgentLeave">
+            <label for="urgentLeave" style="font-weight: bold; color: var(--urgent-red);">UL (Urgent Leave)</label>
+        </div>
+        
+        <div style="display:flex; justify-content:flex-end; gap:5px; margin-top:10px;">
+            <button onclick="closeModal('eventModal')" style="padding:4px 10px; cursor:pointer; border-radius:3px; border:none;">Cancel</button>
+            <button onclick="saveEvent()" style="background:var(--primary); color:white; padding:4px 10px; cursor:pointer; border-radius:3px; border:none;">Save</button>
+        </div>
+    </div>
+</div>
 
         <div id="deleteModal" class="modal">
             <div class="modal-content">
                 <center><h3 style="font-size:12px;">Delete?</h3>
                 <p id="deletePromptText" style="color:#555;"></p>
-				</center><br>
+                </center><br>
                 <div style="display:flex; justify-content:flex-end; gap:5px;">
                     <button onclick="closeModal('deleteModal')" style="padding:4px 10px; cursor:pointer; border-radius:3px; border:none;">Cancel</button>
                     <button id="confirmDeleteBtn" style="background:var(--delete-red); color:white; padding:4px 10px; cursor:pointer; border-radius:3px; border:none;">Confirm</button>
@@ -193,7 +204,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // LOGIN CHECK
     function checkLogin() {
         const input = document.getElementById('passInput');
         const err = document.getElementById('errorMsg');
@@ -209,7 +219,6 @@
     }
     if(sessionStorage.getItem('calendar_auth') === 'true') document.getElementById('loginOverlay').style.display = 'none';
 
-    // CALENDAR CORE LOGIC
     let dt = new Date(); dt.setDate(1); 
     let activeEvents = {}, holidays = [], selectedDateKey = "", currentFetchedYear = null;
 
@@ -275,12 +284,13 @@
             if(activeEvents[key]) {
                 Object.keys(activeEvents[key]).forEach(id => {
                     const ev = activeEvents[key][id];
-                    const p = document.createElement('div'); p.className = 'calendar-pill';
-                    p.innerHTML = `<span>${ev.title}</span><div class="pill-tooltip">Shift: ${ev.shift}</div><span class="pill-delete" onclick="event.stopPropagation(); openDeleteModal('${key}','${id}','${ev.title}')">×</span>`;
+                    const p = document.createElement('div'); 
+                    p.className = 'calendar-pill' + (ev.isUL ? ' is-ul' : ''); // Applied class based on UL tag
+                    p.innerHTML = `<span>${ev.title}${ev.isUL ? '' : ''}</span><div class="pill-tooltip">Shift: ${ev.shift}</div><span class="pill-delete" onclick="event.stopPropagation(); openDeleteModal('${key}','${id}','${ev.title}')">×</span>`;
                     div.appendChild(p);
                 });
             }
-            div.onclick = () => { selectedDateKey = key; document.getElementById('valMsg').style.display='none'; document.getElementById('limitMsg').style.display='none'; openModal('eventModal'); };
+            div.onclick = () => { selectedDateKey = key; document.getElementById('valMsg').style.display='none'; document.getElementById('limitMsg').style.display='none'; document.getElementById('urgentLeave').checked = false; openModal('eventModal'); };
             grid.appendChild(div);
         }
         if(holidayListDiv.innerHTML === '') holidayListDiv.innerHTML = '<div style="font-size:8px; color:#999;">No holidays</div>';
@@ -290,27 +300,43 @@
     function closeModal(id) { document.getElementById(id).style.display='none'; }
 
     function saveEvent() {
-        const t = document.getElementById('eventTitle'), s = document.getElementById('eventShift');
+        const t = document.getElementById('eventTitle'), s = document.getElementById('eventShift'), ul = document.getElementById('urgentLeave');
         const v = document.getElementById('valMsg'), l = document.getElementById('limitMsg');
         v.style.display='none'; l.style.display='none';
 
         if(!t.value.trim() || !s.value) { v.style.display='block'; return; }
 
-        const currentDayEvents = activeEvents[selectedDateKey] || {};
-        let counts = { "7 PM": 0, "8 PM": 0, "11 PM": 0, "1 AM": 0, "10 AM": 0 };
-        Object.values(currentDayEvents).forEach(ev => { if(counts.hasOwnProperty(ev.shift)) counts[ev.shift]++; });
+        // BUSINESS LOGIC: Disregarded if 'ul.checked' is true
+        if(!ul.checked) {
+            const currentDayEvents = activeEvents[selectedDateKey] || {};
+            let counts = { "7 PM": 0, "8 PM": 0, "11 PM": 0, "1 AM": 0, "10 AM": 0 };
+            Object.values(currentDayEvents).forEach(ev => { if(counts.hasOwnProperty(ev.shift)) counts[ev.shift]++; });
 
-        // SHIFT LOGIC RESTORED
-        if((s.value === "7 PM" || s.value === "8 PM") && (counts["7 PM"] + counts["8 PM"]) >= 2) { 
-            l.innerText = "Only 2 leaves allowed across 7PM & 8PM combined."; l.style.display = 'block'; return; 
-        }
-        if((s.value === "10 AM" || s.value === "11 PM" || s.value === "1 AM") && counts[s.value] >= 1) {
-            l.innerText = `Only 1 leave allowed for ${s.value}.`; l.style.display = 'block'; return;
+            if((s.value === "7 PM" || s.value === "8 PM") && (counts["7 PM"] + counts["8 PM"]) >= 2) { 
+                l.innerText = "Only 2 leaves allowed across 7PM & 8PM combined."; l.style.display = 'block'; return; 
+            }
+            if((s.value === "10 AM" || s.value === "11 PM" || s.value === "1 AM") && counts[s.value] >= 1) {
+                l.innerText = `Only 1 leave allowed for ${s.value}.`; l.style.display = 'block'; return;
+            }
         }
 
-        db.ref('activeEvents/'+selectedDateKey).push({ title: t.value, shift: s.value });
-        db.ref('permanentLog').push({ type: 'ADD', title: t.value, eventDate: selectedDateKey, timestamp_manila: new Date().toLocaleString('en-US', {timeZone: 'Asia/Manila'}), timestamp_raw: Date.now() });
-        t.value=''; s.selectedIndex=0; closeModal('eventModal');
+        const logTitle = ul.checked ? `${t.value}` : t.value;
+
+        db.ref('activeEvents/'+selectedDateKey).push({ 
+            title: t.value, 
+            shift: s.value, 
+            isUL: ul.checked // Saved to firebase
+        });
+
+        db.ref('permanentLog').push({ 
+            type: 'ADD', 
+            title: logTitle, 
+            eventDate: selectedDateKey, 
+            timestamp_manila: new Date().toLocaleString('en-US', {timeZone: 'Asia/Manila'}), 
+            timestamp_raw: Date.now() 
+        });
+
+        t.value=''; s.selectedIndex=0; ul.checked = false; closeModal('eventModal');
     }
 
     function openDeleteModal(k, i, t) {
