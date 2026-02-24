@@ -11,7 +11,7 @@
         :root { 
             --primary: #2c3e50; 
             --event-green: #5cb85c; 
-            --urgent-red: #d9534f; /* New Red Color for UL */
+            --urgent-red: #d9534f; 
             --delete-red: #d9534f; 
             --bg: #000000; 
             --border: #eee; 
@@ -50,42 +50,35 @@
         }
         
         .main-wrapper { display: flex; width: 100%; height: 100%; }
-
         .calendar-section { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; overflow-y: auto; position: relative; padding: 0 20px; }
         .notice-banner { width: 100%; background: var(--notice-bg); color: var(--notice-text); padding: 4px; text-align: center; font-size: 10px; font-weight: 600; border-bottom: 1px solid #ffeeba; display: flex; justify-content: center; align-items: center; gap: 10px; }
         .refresh-btn { background: var(--primary); color: white; padding: 2px 6px; border-radius: 3px; cursor: pointer; font-size: 9px; border: none; }
-        
         .calendar-container { width: 100%; max-width: 850px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 6px; overflow: hidden; margin-top: 10px; }
         .calendar-header { display: flex; justify-content: space-between; align-items: center; padding: 6px 15px; background: #fff; }
         .month-display { font-size: 14px; font-weight: bold; color: #333; }
         .day-header { display: grid; grid-template-columns: repeat(7, 1fr); background: var(--primary); color: white; text-align: center; font-size: 9px; font-weight: bold; }
         .day-header div { padding: 4px 0; }
         .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); background: #fff; }
-        
         .day { min-height: 75px; padding: 4px; border: 0.5px solid var(--border); cursor: pointer; position: relative; font-size: 10px; }
         .day:hover { background-color: #f0f7ff; }
         .today { background: #eef6ff !important; font-weight: bold; }
         .today::after { content: "NOW"; font-size: 7px; position: absolute; top: 2px; right: 2px; background: var(--primary); color: white; padding: 1px 3px; border-radius: 2px; }
         .outside { background: #fafafa; color: #ccc; cursor: default; }
-
         .event-pane { width: 210px; background: #ffffff; border-left: 1px solid #ddd; display: flex; flex-direction: column; height: 100vh; padding: 10px; box-sizing: border-box; }
         .holiday-widget { width: 100%; background: #fff; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 15px; flex-shrink: 0; max-height: 200px; overflow-y: auto; }
         .holiday-widget h4 { margin: 0 0 6px 0; font-size: 10px; color: #333; text-transform: uppercase; letter-spacing: 0.5px; }
         .holiday-item { font-size: 9px; margin-bottom: 4px; line-height: 1.2; display: flex; align-items: flex-start; gap: 6px; color: #555; }
         .holiday-item b { color: var(--primary); font-size: 8px; min-width: 15px; }
-
         .log-container { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
         .log-header { position: sticky; top: 0; background: white; z-index: 10; padding-bottom: 5px; border-bottom: 1px solid #eee; margin-bottom: 8px; }
         .log-item { padding: 5px; border-radius: 0 3px 3px 0; margin-bottom: 4px; font-size: 9px; background: #fdfdfd; border-left: 3px solid #ccc; }
         .log-add { border-left-color: var(--event-green); }
         .log-delete { border-left-color: var(--delete-red); }
-
         .calendar-pill { background: var(--event-green); color: white; font-size: 9px; padding: 2px 5px; border-radius: 2px; margin-top: 2px; display: flex; align-items: center; justify-content: space-between; position: relative; }
-        .calendar-pill.is-ul { background: var(--urgent-red); } /* Style for UL */
+        .calendar-pill.is-ul { background: var(--urgent-red); }
         .pill-tooltip { visibility: hidden; position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%); background-color: #333; color: #fff; padding: 4px 8px; border-radius: 4px; white-space: nowrap; font-size: 9px; z-index: 2000; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
         .calendar-pill:hover .pill-tooltip { visibility: visible; opacity: 1; }
         .pill-delete { cursor: pointer; font-size: 11px; margin-left: 4px; }
-
         .modal { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.4); backdrop-filter: blur(1px); align-items: center; justify-content: center; z-index: 100; }
         .modal-content { background: white; padding: 15px; border-radius: 6px; width: 240px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); border: 1px solid #ddd; }
     </style>
@@ -204,24 +197,64 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    let dt = new Date(); dt.setDate(1); 
+    let activeEvents = {}, holidays = [], selectedDateKey = "", currentFetchedYear = null;
+
+    // --- SECURITY LOGIC ---
     function checkLogin() {
         const input = document.getElementById('passInput');
         const err = document.getElementById('errorMsg');
+        
+        // Only fetch the password to verify
         db.ref('pwd').once('value').then((snap) => {
             if (String(input.value).trim() === String(snap.val()).trim()) {
                 document.getElementById('loginOverlay').style.display = 'none';
                 sessionStorage.setItem('calendar_auth', 'true');
+                initApp(); // DATA ONLY LOADS HERE
             } else {
                 err.style.display = 'block';
                 input.value = "";
             }
         });
     }
-    if(sessionStorage.getItem('calendar_auth') === 'true') document.getElementById('loginOverlay').style.display = 'none';
 
-    let dt = new Date(); dt.setDate(1); 
-    let activeEvents = {}, holidays = [], selectedDateKey = "", currentFetchedYear = null;
+    // --- APP INITIALIZATION (The "Load" part) ---
+    function initApp() {
+        // Fetch Holiday and Calendar Data
+        fetchHolidays(dt.getFullYear());
 
+        // Listen for Calendar Events
+        db.ref('activeEvents').on('value', snap => { 
+            activeEvents = snap.val() || {}; 
+            renderCalendar(); 
+        });
+
+        // Listen for Logs
+        db.ref('permanentLog').on('value', snap => {
+            const paneList = document.getElementById('paneList');
+            paneList.innerHTML = '';
+            const logs = snap.val() || {};
+            Object.keys(logs).reverse().slice(0, 50).forEach(k => {
+                const entry = logs[k];
+                const div = document.createElement('div');
+                div.className = `log-item ${entry.type==='ADD'?'log-add':'log-delete'}`;
+                div.innerHTML = `<strong>${entry.type}: ${entry.title}</strong><br><span style="color:var(--primary); font-weight:bold; font-size:8px;">Event: ${entry.eventDate || 'N/A'}</span><br><span style="color:#888; font-size:8px;">${entry.timestamp_manila}</span>`;
+                paneList.appendChild(div);
+            });
+        });
+
+        // Run maintenance
+        purgeOldLogs();
+        setInterval(purgeOldLogs, 12 * 60 * 60 * 1000);
+    }
+
+    // Check if already logged in on page refresh
+    if(sessionStorage.getItem('calendar_auth') === 'true') {
+        document.getElementById('loginOverlay').style.display = 'none';
+        initApp();
+    }
+
+    // --- CALENDAR & UI LOGIC (REMAINS UNTOUCHED) ---
     async function fetchHolidays(year) {
         if (year === currentFetchedYear) { renderCalendar(); return; }
         try {
@@ -240,27 +273,11 @@
         } catch (e) { renderCalendar(); }
     }
 
-    db.ref('activeEvents').on('value', snap => { activeEvents = snap.val() || {}; renderCalendar(); });
-
-    db.ref('permanentLog').on('value', snap => {
-        const paneList = document.getElementById('paneList');
-        paneList.innerHTML = '';
-        const logs = snap.val() || {};
-        Object.keys(logs).reverse().slice(0, 50).forEach(k => {
-            const entry = logs[k];
-            const div = document.createElement('div');
-            div.className = `log-item ${entry.type==='ADD'?'log-add':'log-delete'}`;
-            div.innerHTML = `<strong>${entry.type}: ${entry.title}</strong><br><span style="color:var(--primary); font-weight:bold; font-size:8px;">Event: ${entry.eventDate || 'N/A'}</span><br><span style="color:#888; font-size:8px;">${entry.timestamp_manila}</span>`;
-            paneList.appendChild(div);
-        });
-    });
-
     function renderCalendar() {
         const grid = document.getElementById('calendarGrid'); grid.innerHTML = '';
         const month = dt.getMonth(), year = dt.getFullYear();
         document.getElementById('monthDisplay').innerText = dt.toLocaleDateString('en-us', { month: 'long', year: 'numeric' });
         const holidayListDiv = document.getElementById('holidayList'); holidayListDiv.innerHTML = '';
-        
         const firstDay = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         
@@ -270,23 +287,20 @@
         for(let d=1; d<=daysInMonth; d++) {
             const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             const key = `${year}-${month+1}-${d}`;
-            
             const dayHolidays = holidays.filter(h => h.date === dateStr);
             if(dayHolidays.length > 0) {
                 const item = document.createElement('div'); item.className = 'holiday-item';
                 item.innerHTML = `<b>${dayHolidays[0].country}</b> <span>${d}: ${dayHolidays[0].name}</span>`; 
                 holidayListDiv.appendChild(item);
             }
-
             const div = document.createElement('div'); div.className = 'day'; div.innerHTML = `<strong>${d}</strong>`;
             if(d === today.getDate() && month === today.getMonth() && year === today.getFullYear()) div.classList.add('today');
-            
             if(activeEvents[key]) {
                 Object.keys(activeEvents[key]).forEach(id => {
                     const ev = activeEvents[key][id];
                     const p = document.createElement('div'); 
-                    p.className = 'calendar-pill' + (ev.isUL ? ' is-ul' : ''); // Applied class based on UL tag
-                    p.innerHTML = `<span>${ev.title}${ev.isUL ? '' : ''}</span><div class="pill-tooltip">Shift: ${ev.shift}</div><span class="pill-delete" onclick="event.stopPropagation(); openDeleteModal('${key}','${id}','${ev.title}')">×</span>`;
+                    p.className = 'calendar-pill' + (ev.isUL ? ' is-ul' : '');
+                    p.innerHTML = `<span>${ev.title}</span><div class="pill-tooltip">Shift: ${ev.shift}</div><span class="pill-delete" onclick="event.stopPropagation(); openDeleteModal('${key}','${id}','${ev.title}')">×</span>`;
                     div.appendChild(p);
                 });
             }
@@ -303,15 +317,11 @@
         const t = document.getElementById('eventTitle'), s = document.getElementById('eventShift'), ul = document.getElementById('urgentLeave');
         const v = document.getElementById('valMsg'), l = document.getElementById('limitMsg');
         v.style.display='none'; l.style.display='none';
-
         if(!t.value.trim() || !s.value) { v.style.display='block'; return; }
-
-        // BUSINESS LOGIC: Disregarded if 'ul.checked' is true
         if(!ul.checked) {
             const currentDayEvents = activeEvents[selectedDateKey] || {};
             let counts = { "7 PM": 0, "8 PM": 0, "11 PM": 0, "1 AM": 0, "10 AM": 0 };
             Object.values(currentDayEvents).forEach(ev => { if(counts.hasOwnProperty(ev.shift)) counts[ev.shift]++; });
-
             if((s.value === "7 PM" || s.value === "8 PM") && (counts["7 PM"] + counts["8 PM"]) >= 2) { 
                 l.innerText = "Only 2 leaves allowed across 7PM & 8PM combined."; l.style.display = 'block'; return; 
             }
@@ -319,23 +329,8 @@
                 l.innerText = `Only 1 leave allowed for ${s.value}.`; l.style.display = 'block'; return;
             }
         }
-
-        const logTitle = ul.checked ? `${t.value}` : t.value;
-
-        db.ref('activeEvents/'+selectedDateKey).push({ 
-            title: t.value, 
-            shift: s.value, 
-            isUL: ul.checked // Saved to firebase
-        });
-
-        db.ref('permanentLog').push({ 
-            type: 'ADD', 
-            title: logTitle, 
-            eventDate: selectedDateKey, 
-            timestamp_manila: new Date().toLocaleString('en-US', {timeZone: 'Asia/Manila'}), 
-            timestamp_raw: Date.now() 
-        });
-
+        db.ref('activeEvents/'+selectedDateKey).push({ title: t.value, shift: s.value, isUL: ul.checked });
+        db.ref('permanentLog').push({ type: 'ADD', title: t.value, eventDate: selectedDateKey, timestamp_manila: new Date().toLocaleString('en-US', {timeZone: 'Asia/Manila'}), timestamp_raw: Date.now() });
         t.value=''; s.selectedIndex=0; ul.checked = false; closeModal('eventModal');
     }
 
@@ -356,10 +351,6 @@
             if (snap.exists()) { const updates = {}; snap.forEach((child) => { updates[child.key] = null; }); db.ref('permanentLog').update(updates); }
         });
     }
-
-    fetchHolidays(dt.getFullYear());
-    purgeOldLogs();
-    setInterval(purgeOldLogs, 12 * 60 * 60 * 1000);
 </script>
 </body>
 </html>
